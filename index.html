@@ -8,7 +8,7 @@
 </style></head><body><main class="app"><div class="title">🪀 YoYo Part Practice</div><div class="sub">止めた位置で区切るだけ。パートは自動で増えていきます。</div>
 <section class="card"><div class="row"><label class="file">MP3 / MP4を読み込む<input id="file" type="file" accept="audio/mpeg,audio/mp3,video/mp4,audio/mp4,.mp3,.mp4"></label><div id="filename" class="small grow">MP3またはMP4ファイルを選択してください</div><div id="loadstatus" class="small" style="width:100%;margin-top:8px"></div></div></section>
 <section class="card"><div class="row"><div id="current" class="time">0:00.00</div><div class="grow"></div><div id="duration" class="small">0:00.00</div></div><input id="seek" class="bar" type="range" min="0" max="1000" value="0"><div class="controls"><button id="play" class="play">▶ 再生</button></div><button id="cut" class="cut">✂️ ここで区切る</button><div class="small" style="margin-top:8px;text-align:center">再生を止め、カーソルを合わせて「ここで区切る」</div></section>
-<section class="card"><div class="small" style="margin-bottom:8px">再生速度</div><div id="speeds" class="speed"></div></section>
+<section class="card"><div class="small" style="margin-bottom:8px"></div><div id="speeds" class="speed"></div></section>
 <section class="card"><div class="row"><b>練習パート</b><div class="grow"></div><label class="small"><input id="loop" type="checkbox" checked> 選択範囲をループ</label></div><div class="small" style="margin-top:8px">複数パートを選択すると、最初の選択パートから最後の選択パートまで通しで再生します。</div><button id="playSelected" style="width:100%;margin-top:10px">▶ 選択パートを通し再生</button><div id="segments"><div class="empty">曲を読み込むとパート1が表示されます</div></div><button id="reset" class="danger" style="width:100%;margin-top:12px">区切りをすべて削除</button></section>
 <video id="audio" playsinline preload="metadata" style="display:none"></video></main><script>
 const $=id=>document.getElementById(id),audio=$('audio'),seek=$('seek');let cuts=[],activeIndex=null,selected=new Set(),playRange=null;const fmt=t=>{if(!isFinite(t))return'0:00.00';let m=Math.floor(t/60),s=t-m*60;return `${m}:${s.toFixed(2).padStart(5,'0')}`};
@@ -31,7 +31,7 @@ function projects(){try{return JSON.parse(localStorage.getItem(PROJECT_KEY)||'[]
 function saveProjects(x){localStorage.setItem(PROJECT_KEY,JSON.stringify(x));drawProjects()}
 function drawProjects(){
  const box=$('savedProjects'), ps=projects(); box.innerHTML='';
- if(!ps.length){box.innerHTML='<div class="small">まだ保存データはありません</div>';return}
+ if(!ps.length){box.innerHTML='<div class="small">まだパート練習データはありません</div>';return}
  ps.forEach((p,i)=>{
    const d=document.createElement('div'); d.style.cssText='display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 0;border-top:1px solid #2a2f3a';
    const t=document.createElement('div'); t.innerHTML='<b>'+escapeHtml(p.name)+'</b><div class="small">'+(p.cuts.length+1)+'パート</div>';
@@ -45,8 +45,11 @@ function drawProjects(){
 }
 $('saveProject').onclick=()=>{
  const f=fileInput.files&&fileInput.files[0]; if(!f)return alert('先に曲を読み込んでください');
- const a=projects(), p={name:f.name,cuts:[...cuts],savedAt:Date.now()}, i=a.findIndex(x=>x.name===f.name);
- if(i>=0)a[i]=p;else a.push(p); saveProjects(a); alert('保存しました');
+ const a=projects(), defaultName='パート練習'+(a.length+1);
+ const name=prompt('保存名',defaultName); if(!name)return;
+ const p={name:name,fileName:f.name,cuts:[...cuts],savedAt:Date.now()};
+ const i=a.findIndex(x=>x.name===name); if(i>=0)a[i]=p;else a.push(p);
+ saveProjects(a); alert('「'+name+'」として保存しました');
 };
 fileInput.addEventListener('change',()=>{
  if(!pendingProject)return;
@@ -104,6 +107,6 @@ if('mediaSession' in navigator){
 drawProjects();
 
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js?v=7').catch(()=>{}));
+  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js?v=8').catch(()=>{}));
 }
 </script></body></html>
