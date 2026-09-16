@@ -25,7 +25,61 @@ function renderSegments(){let box=$('segments'),segs=getSegments();box.innerHTML
 $('playSelected').onclick=()=>{let segs=getSegments();if(!segs.length)return alert('先に曲を読み込んでください');if(!selected.size)return alert('再生したいパートを選択してください');let ids=[...selected].sort((a,b)=>a-b),first=ids[0],last=ids[ids.length-1];playRange={start:segs[first].start,end:segs[last].end};activeIndex=null;audio.currentTime=playRange.start;audio.play()};$('reset').onclick=()=>{if(!cuts.length)return;cuts=[];activeIndex=null;selected.clear();playRange=null;renderSegments()};
 [.5,.75,1,1.25,1.5].forEach(v=>{let b=document.createElement('button');b.textContent=v+'×';if(v===1)b.classList.add('on');b.onclick=()=>{audio.playbackRate=v;document.querySelectorAll('#speeds button').forEach(x=>x.classList.remove('on'));b.classList.add('on')};$('speeds').appendChild(b)});
 renderSegments();
+
+const PROJECT_KEY='yoyoProjectsV1'; let pendingProject=null;
+function projects(){try{return JSON.parse(localStorage.getItem(PROJECT_KEY)||'[]')}catch(e){return[]}}
+function saveProjects(x){localStorage.setItem(PROJECT_KEY,JSON.stringify(x));drawProjects()}
+function drawProjects(){
+ const box=$('savedProjects'), ps=projects(); box.innerHTML='';
+ if(!ps.length){box.innerHTML='<div class="small">まだ保存データはありません</div>';return}
+ ps.forEach((p,i)=>{
+   const d=document.createElement('div'); d.style.cssText='display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 0;border-top:1px solid #2a2f3a';
+   const t=document.createElement('div'); t.innerHTML='<b>'+escapeHtml(p.name)+'</b><div class="small">'+(p.cuts.length+1)+'パート</div>';
+   const r=document.createElement('div'); r.className='row';
+   const o=document.createElement('button'); o.className='secondary'; o.style.width='auto'; o.textContent='開く';
+   o.onclick=()=>{pendingProject=p; alert('同じ曲ファイルを選んでください。区切り位置を復元します。'); fileInput.click()};
+   const x=document.createElement('button'); x.className='danger'; x.style.width='auto'; x.textContent='削除';
+   x.onclick=()=>{const a=projects();a.splice(i,1);saveProjects(a)};
+   r.append(o,x); d.append(t,r); box.appendChild(d);
+ })
+}
+$('saveProject').onclick=()=>{
+ const f=fileInput.files&&fileInput.files[0]; if(!f)return alert('先に曲を読み込んでください');
+ const a=projects(), p={name:f.name,cuts:[...cuts],savedAt:Date.now()}, i=a.findIndex(x=>x.name===f.name);
+ if(i>=0)a[i]=p;else a.push(p); saveProjects(a); alert('保存しました');
+};
+fileInput.addEventListener('change',()=>{
+ if(!pendingProject)return;
+ const f=fileInput.files&&fileInput.files[0]; if(!f||f.name!==pendingProject.name)return;
+ const restore=()=>{cuts=[...pendingProject.cuts].filter(x=>x>0&&x<media.duration).sort((a,b)=>a-b);renderSegments();pendingProject=null};
+ if(Number.isFinite(media.duration)&&media.duration>0)restore();else media.addEventListener('loadedmetadata',restore,{once:true});
+});
+function currentPartIndex(){
+ const b=bounds(); if(!b.length)return 0; const t=media.currentTime;
+ const i=b.findIndex(x=>t>=x.start&&t<x.end); return i<0?Math.max(0,b.length-1):i;
+}
+function playPartStart(i){
+ const b=bounds(); if(!b.length)return; i=Math.max(0,Math.min(i,b.length-1));
+ media.currentTime=b[i].start; media.play().catch(()=>{});
+}
+function headphonePrevious(){
+ const b=bounds(); if(!b.length)return; const i=currentPartIndex(), elapsed=media.currentTime-b[i].start;
+ playPartStart(elapsed<=2?i-1:i);
+}
+function headphoneNext(){playPartStart(currentPartIndex()+1)}
+if('mediaSession' in navigator){
+ try{
+  navigator.mediaSession.setActionHandler('play',()=>media.play());
+  navigator.mediaSession.setActionHandler('pause',()=>media.pause());
+  navigator.mediaSession.setActionHandler('previoustrack',headphonePrevious);
+  navigator.mediaSession.setActionHandler('nexttrack',headphoneNext);
+  navigator.mediaSession.setActionHandler('seekbackward',headphonePrevious);
+  navigator.mediaSession.setActionHandler('seekforward',headphoneNext);
+ }catch(e){}
+}
+drawProjects();
+
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js?v=6').catch(()=>{}));
 }
 </script></body></html>
