@@ -67,19 +67,43 @@ function headphonePrevious(){
  playPartStart(elapsed<=2?i-1:i);
 }
 function headphoneNext(){playPartStart(currentPartIndex()+1)}
+
+function remoteLog(label, result){
+ const el=$('remoteEventLog'); if(!el)return;
+ const now=new Date().toLocaleTimeString();
+ el.textContent=now+'  受信: '+label+(result?' → '+result:'');
+}
+if($('clearRemoteLog')) $('clearRemoteLog').onclick=()=>{$('remoteEventLog').textContent='待機中…'};
+
+function loggedPrevious(label){
+ const b=bounds(); if(!b.length){remoteLog(label,'曲を読み込んでください');return}
+ const i=currentPartIndex(), elapsed=media.currentTime-b[i].start;
+ const target=elapsed<=2?Math.max(0,i-1):i;
+ remoteLog(label,'パート'+(target+1)+'の先頭');
+ playPartStart(target);
+}
+function loggedNext(label){
+ const b=bounds(); if(!b.length){remoteLog(label,'曲を読み込んでください');return}
+ const target=Math.min(b.length-1,currentPartIndex()+1);
+ remoteLog(label,'パート'+(target+1)+'の先頭');
+ playPartStart(target);
+}
 if('mediaSession' in navigator){
  try{
-  navigator.mediaSession.setActionHandler('play',()=>media.play());
-  navigator.mediaSession.setActionHandler('pause',()=>media.pause());
-  navigator.mediaSession.setActionHandler('previoustrack',headphonePrevious);
-  navigator.mediaSession.setActionHandler('nexttrack',headphoneNext);
-  navigator.mediaSession.setActionHandler('seekbackward',headphonePrevious);
-  navigator.mediaSession.setActionHandler('seekforward',headphoneNext);
- }catch(e){}
+  navigator.mediaSession.setActionHandler('play',()=>{remoteLog('Play','再生');media.play()});
+  navigator.mediaSession.setActionHandler('pause',()=>{remoteLog('Pause','一時停止');media.pause()});
+  navigator.mediaSession.setActionHandler('previoustrack',()=>loggedPrevious('Previous Track'));
+  navigator.mediaSession.setActionHandler('nexttrack',()=>loggedNext('Next Track'));
+  navigator.mediaSession.setActionHandler('seekbackward',()=>loggedPrevious('Seek Backward'));
+  navigator.mediaSession.setActionHandler('seekforward',()=>loggedNext('Seek Forward'));
+ }catch(e){remoteLog('Media Session','このブラウザでは一部操作を登録できません')}
+}else{
+ remoteLog('Media Session','このブラウザは未対応');
 }
+
 drawProjects();
 
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js?v=6').catch(()=>{}));
+  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js?v=7').catch(()=>{}));
 }
 </script></body></html>
