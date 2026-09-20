@@ -15,7 +15,7 @@ button,.file{border:1px solid rgba(255,255,255,.09);border-radius:13px;backgroun
 </style></head><body><main class="app">
 <div class="title">YoYo Part Practice</div>
 <section class="card"><div class="row" style="margin-bottom:12px"><b>曲選択パート</b></div>
-<div class="topActions"><button id="newFileBtn" type="button">新規作成</button><input id="file" type="file" accept="audio/mpeg,audio/mp3,video/mp4,audio/mp4,.mp3,.mp4" style="display:none"><button id="savePracticeOpen">保存</button><button id="overwritePractice">上書き保存</button><button id="openSaved">保存データを開く</button></div><div id="loadstatus" class="small" style="margin-top:8px"></div></section>
+<div class="topActions"><button id="newFileBtn" type="button">新規作成</button><input id="file" type="file" accept="audio/mpeg,audio/mp3,video/mp4,audio/mp4,.mp3,.mp4" style="display:none"><button id="savePracticeOpen">保存</button><button id="openSaved">保存データを開く</button></div><div id="loadstatus" class="small" style="margin-top:8px"></div></section>
 <section class="card"><div class="row" style="margin-bottom:10px"><div class="songTitleWrap grow"><span id="songTitle" class="songTitle">曲名未選択</span></div></div><div class="row"><div id="current" class="time">0:00.00</div><div class="grow"></div><div id="duration" class="small">0:00.00</div></div><input id="seek" class="bar" type="range" min="0" max="1000" value="0"><div class="splitActions"><button id="play">再生</button><button id="cut">分割</button></div></section>
 <section class="card"><div class="row"><b>練習パート</b><div class="grow"></div><label class="small"><input id="loop" type="checkbox" checked> 選択範囲をループ</label><label class="small loopDelayLabel">無音 <input id="loopDelay" type="number" min="0" max="60" step="1" value="0"> 秒</label></div><div class="small" style="margin-top:8px">複数パートを選択すると、最初の選択パートから最後の選択パートまで通しで再生します。</div><button id="playSelected" style="width:100%;margin-top:10px">選択パートを通し再生</button><div id="segments"><div class="empty">曲を読み込むとパート1が表示されます</div></div><button id="reset" class="danger" style="width:100%;margin-top:12px">区切りをすべて削除</button></section>
 <div id="saveNameModal" class="savedModal" style="display:none"><div class="savedModalBox"><div class="savedModalHead"><b>保存名称</b><button id="closeSaveName" class="closeSaved">×</button></div><input id="saveName" class="saveName" placeholder="保存名（例：練習曲1）"><button id="savePractice" style="margin-top:12px">保存</button></div></div>
@@ -90,22 +90,19 @@ async function get(k){let d=await db();return new Promise((ok,no)=>{let r=d.tran
 async function del(k){let d=await db();return new Promise((ok,no)=>{let t=d.transaction(STORE,'readwrite');t.objectStore(STORE).delete(k);t.oncomplete=ok;t.onerror=()=>no(t.error)})}
 const meta=()=>{try{return JSON.parse(localStorage.getItem(META)||'[]')}catch{return[]}},write=a=>localStorage.setItem(META,JSON.stringify(a));
 function renderSaved(){let b=$('savedPracticesTop'),a=meta();b.innerHTML=a.length?'':'<div class="small">保存データはありません</div>';a.forEach(p=>{let r=document.createElement('div');r.className='savedItem';let o=document.createElement('button');o.className='openSaved';o.textContent=p.name;o.onclick=async()=>{let s=await get(p.fileKey);if(!s)return alert('保存した曲データが見つかりません');let f=s instanceof File?s:new File([s],p.fileName||'practice-media',{type:p.fileType||s.type||''});if(objectUrl)URL.revokeObjectURL(objectUrl);currentSourceFile=f;objectUrl=URL.createObjectURL(f);audio.src=objectUrl;cuts=[...(p.cuts||[])];partNames=[...(p.partNames||[])];selected.clear();playRange=null;audio.load();$('savedPanel').style.display='none'};let x=document.createElement('button');x.className='deleteSaved';x.textContent='削除';x.onclick=async()=>{if(confirm('この保存データを削除しますか？')){await del(p.fileKey);write(meta().filter(v=>v.id!==p.id));renderSaved()}};r.append(o,x);b.append(r)})}
-$('overwritePractice').onclick=async()=>{
- if(!currentSavedId)return alert('上書きする保存データを「保存データを開く」から先に開いてください');
- if(!currentSourceFile)return alert('曲が読み込まれていません');
- let a=meta(),i=a.findIndex(v=>v.id===currentSavedId);
- if(i<0)return alert('上書き対象が見つかりません');
- let p=a[i];
- await put(p.fileKey,currentSourceFile);
- a[i]={...p,fileName:currentSourceFile.name,fileType:currentSourceFile.type,cuts:[...cuts],partNames:[...partNames]};
- write(a);renderSaved();
- $('loadstatus').textContent='上書き保存しました';
-};
-$('savePracticeOpen').onclick=()=>{$('saveName').value='';$('saveNameModal').style.display='flex'};
-$('closeSaveName').onclick=()=>$('saveNameModal').style.display='none';
-$('savePractice').onclick=async()=>{let name=$('saveName').value.trim();if(!name)return alert('保存名を入力してください');if(!currentSourceFile)return alert('先にMP3 / MP4を読み込んでください');let id=Date.now().toString(),key='file_'+id;await put(key,currentSourceFile);let a=meta();a.unshift({id,name,fileKey:key,fileName:currentSourceFile.name,fileType:currentSourceFile.type,cuts:[...cuts],partNames:[...partNames]});write(a);$('saveNameModal').style.display='none';renderSaved();
- // Ensure next New File action is never blocked by the previous file selection.
- $('file').value='';
+$('savePracticeOpen').onclick=async()=>{
+ if(currentSavedId){
+   let a=meta(),i=a.findIndex(v=>v.id===currentSavedId);
+   if(i>=0 && currentSourceFile){
+     let p=a[i];
+     await put(p.fileKey,currentSourceFile);
+     a[i]={...p,fileName:currentSourceFile.name,fileType:currentSourceFile.type,cuts:[...cuts],partNames:[...partNames]};
+     write(a);renderSaved();$('loadstatus').textContent='上書き保存しました';return;
+   }
+ }
+ $('saveName').value='';
+ $('savePractice').textContent='保存';
+ $('saveNameModal').style.display='flex';
 };
 $('openSaved').onclick=()=>{$('savedPanel').style.display='flex';renderSaved()};
 $('closeSaved').onclick=()=>$('savedPanel').style.display='none';
@@ -174,5 +171,49 @@ function setupHeadsetControls(){
 setupHeadsetControls();
 audio.addEventListener('play',()=>{try{navigator.mediaSession.playbackState='playing'}catch(e){}});
 audio.addEventListener('pause',()=>{try{navigator.mediaSession.playbackState='paused'}catch(e){}});
+
+
+function activateMediaSession(){
+ if(!('mediaSession' in navigator))return;
+ try{
+   const title=(document.getElementById('songTitle')?.textContent||'YoYo Part Practice');
+   navigator.mediaSession.metadata=new MediaMetadata({title:title,artist:'YoYo Part Practice',album:'Part Practice'});
+   navigator.mediaSession.playbackState=audio.paused?'paused':'playing';
+ }catch(e){}
+}
+audio.addEventListener('playing',activateMediaSession);
+audio.addEventListener('loadedmetadata',activateMediaSession);
+
+
+// iPhoneで本アプリを操作した時に、この音声セッションを前面にする
+let mediaSessionPrimed=false;
+async function claimMediaSession(){
+ if(!audio.src)return;
+ try{
+   if('mediaSession' in navigator){
+     const title=document.getElementById('songTitle')?.textContent||'YoYo Part Practice';
+     navigator.mediaSession.metadata=new MediaMetadata({title,artist:'YoYo Part Practice',album:'Part Practice'});
+   }
+   // iOSではユーザー操作を伴うplay()がメディア操作権取得に重要
+   if(audio.paused && !mediaSessionPrimed){
+     const t=audio.currentTime;
+     audio.muted=true;
+     await audio.play();
+     await new Promise(r=>setTimeout(r,40));
+     audio.pause();
+     audio.currentTime=t;
+     audio.muted=false;
+     mediaSessionPrimed=true;
+   }
+   setupHeadsetControls();
+   if('mediaSession' in navigator) navigator.mediaSession.playbackState=audio.paused?'paused':'playing';
+ }catch(e){audio.muted=false;}
+}
+document.addEventListener('pointerdown',()=>{claimMediaSession()}, {passive:true});
+document.addEventListener('touchstart',()=>{claimMediaSession()}, {passive:true});
+window.addEventListener('focus',()=>{setupHeadsetControls();activateMediaSession()});
+document.addEventListener('visibilitychange',()=>{
+ if(!document.hidden){setupHeadsetControls();activateMediaSession()}
+});
 
 </script></body></html>
