@@ -177,6 +177,33 @@ button,.primary,.cut,#reset,.deleteSaved{border:2px solid rgba(255,255,255,.92)!
   min-width:82px!important;
 }
 
+
+/* v35: iPhone part-row fit + blue delete buttons */
+.segment{gap:6px!important;padding:9px!important;min-width:0!important;overflow:hidden!important}
+.segment .grow{min-width:0!important}
+.segment .partName{width:100%!important;max-width:none!important;min-width:0!important;font-size:14px!important;padding:6px!important}
+.segment .segtimes{font-size:11px!important;white-space:nowrap!important}
+.segment .go,.segment .del{
+  flex:0 0 auto!important;
+  min-width:0!important;
+  width:auto!important;
+  font-size:13px!important;
+  padding:8px 9px!important;
+  white-space:nowrap!important;
+}
+.savedItem{min-width:0!important}
+.savedItem .openSaved{min-width:0!important;font-size:14px!important;padding:11px 12px!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}
+.savedItem .deleteSaved{flex:0 0 auto!important;font-size:13px!important;padding:10px 12px!important}
+button.deleteSaved,.deleteSaved{
+  background:linear-gradient(135deg,var(--accent1),var(--accent2))!important;
+  box-shadow:0 8px 20px rgba(25,70,190,.22),inset 0 1px 0 rgba(255,255,255,.16)!important;
+}
+@media(max-width:480px){
+  .segment{gap:5px!important;padding:8px!important}
+  .selectbox{width:20px!important;height:20px!important;flex:0 0 20px!important}
+  .segment .go,.segment .del{font-size:12px!important;padding:8px 7px!important}
+}
+
 </style></head><body><main class="app"><div class="title">🪀 YoYo Part Practice</div>
 <section class="card"><div class="row" style="margin-bottom:12px"><b>曲選択</b></div><div class="row"><div class="topActions"><label class="file">新規作成<input id="file" type="file" accept="audio/mpeg,audio/mp3,video/mp4,audio/mp4,.mp3,.mp4"></label><button id="savePracticeOpen" class="primary saveTopBtn" onclick="openSaveNameModal()">保存</button><button id="openSaved" class="primary openTopBtn">📂 保存データを開く</button></div><div id="loadstatus" class="small" style="width:100%;margin-top:8px"></div></div>
 <div style="margin-top:12px">
@@ -207,11 +234,30 @@ button,.primary,.cut,#reset,.deleteSaved{border:2px solid rgba(255,255,255,.92)!
 <video id="audio" playsinline preload="metadata" style="display:none"></video></main><script>
 const $=id=>document.getElementById(id),audio=$('audio'),seek=$('seek');let cuts=[],activeIndex=null,selected=new Set(),playRange=null,partNames=[];const fmt=t=>{if(!isFinite(t))return'0:00.00';let m=Math.floor(t/60),s=t-m*60;return `${m}:${s.toFixed(2).padStart(5,'0')}`};
 let objectUrl=null;
-$('file').onchange=e=>{currentSourceFile=e.target.files&&e.target.files[0]?e.target.files[0]:null;let f=e.target.files&&e.target.files[0];if(!f)return;let ext=(f.name.split('.').pop()||'').toLowerCase();if(!['mp3','mp4'].includes(ext))return alert('');audio.pause();if(objectUrl)URL.revokeObjectURL(objectUrl);objectUrl=URL.createObjectURL(f);audio.removeAttribute('src');audio.src=objectUrl;audio.load();$('filename').textContent=f.name;$('loadstatus').textContent='読み込み中…';
-cuts=[];partNames=[];selected.clear();activeIndex=null;playRange=null;
-if(typeof loopDelayTimer!=='undefined')clearTimeout(loopDelayTimer);
-if(typeof loopWaiting!=='undefined')loopWaiting=false;selected.clear();playRange=null;renderSegments()};
-audio.onloadedmetadata=()=>{$('duration').textContent=fmt(audio.duration);$('loadstatus').textContent='✓ 読み込み完了（Bluetoothイヤホン接続時はiPhoneの音声出力先に従います）';renderSegments()};
+$('file').onchange=e=>{
+  currentSourceFile=e.target.files&&e.target.files[0]?e.target.files[0]:null;
+  const f=currentSourceFile;
+  if(!f)return;
+  const ext=(f.name.split('.').pop()||'').toLowerCase();
+  if(!['mp3','mp4'].includes(ext))return alert('');
+  audio.pause();
+  if(typeof loopDelayTimer!=='undefined')clearTimeout(loopDelayTimer);
+  if(typeof loopWaiting!=='undefined')loopWaiting=false;
+  cuts=[]; partNames=[]; selected.clear(); activeIndex=null; playRange=null;
+  audio.currentTime=0;
+  seek.value=0;
+  $('current').textContent='0:00.00';
+  $('duration').textContent='0:00.00';
+  $('play').textContent='▶ 再生';
+  renderSegments();
+  if(objectUrl)URL.revokeObjectURL(objectUrl);
+  objectUrl=URL.createObjectURL(f);
+  audio.removeAttribute('src');
+  audio.src=objectUrl;
+  $('loadstatus').textContent='読み込み中…';
+  audio.load();
+};
+audio.onloadedmetadata=()=>{audio.currentTime=0;seek.value=0;$('current').textContent='0:00.00';$('duration').textContent=fmt(audio.duration);$('loadstatus').textContent='✓ 読み込み完了（Bluetoothイヤホン接続時はiPhoneの音声出力先に従います）';renderSegments()};
 audio.onerror=()=>{$('loadstatus').textContent='このファイルを再生できません。MP3、またはH.264/AACなどiPhoneで再生可能なMP4を選択してください。';alert('ファイルを読み込めませんでした。MP3またはiPhoneで再生可能なMP4を選択してください。')};
 let loopDelayTimer=null,loopWaiting=false;
 audio.ontimeupdate=()=>{
