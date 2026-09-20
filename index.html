@@ -1,336 +1,83 @@
-<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>YoYo Part Practice</title>
-<link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#0d0f14">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="YoYo Practice"><style>
-:root{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#0d0f14;color:#fff}.app{max-width:760px;margin:auto;padding:18px 16px 40px}.title{font-size:25px;font-weight:800;margin:8px 0 4px}.sub{color:#9ba3b2;font-size:13px;margin-bottom:18px}.card{background:#171a22;border:1px solid #292e3b;border-radius:18px;padding:15px;margin:12px 0}button,.file{border:0;border-radius:13px;background:#2c65f6;color:white;font-weight:700;padding:12px 15px;font-size:15px;cursor:pointer}.file{display:inline-block}input[type=file]{display:none}.row{display:flex;gap:9px;align-items:center;flex-wrap:wrap}.grow{flex:1}.time{font-variant-numeric:tabular-nums;font-size:28px;font-weight:800}.bar{width:100%;accent-color:#5d83ff}.small{font-size:12px;color:#9ba3b2}.controls{display:grid;grid-template-columns:1fr;gap:8px;margin-top:12px}.controls button{padding:12px 5px;background:#252a36}.controls .play,.cut{background:#2c65f6}.cut{width:100%;margin-top:12px;font-size:17px;padding:15px}.segment{display:flex;align-items:center;gap:9px;padding:10px;border-radius:13px;background:#20242e;margin-top:8px}.segment.selected{outline:2px solid #5d83ff;background:#252c3c}.selectbox{width:22px;height:22px;accent-color:#5d83ff}.segment button{padding:8px 10px;font-size:13px}.segname{font-weight:700}.segtimes{font-size:12px;color:#aab1be}.empty{text-align:center;color:#7e8798;padding:14px}.speed{display:flex;gap:7px;flex-wrap:wrap}.speed button{background:#252a36;padding:8px 11px}.speed button.on{background:#2c65f6}.danger{background:#59343a!important}@media(max-width:480px){.time{font-size:24px}}
-.partName{width:145px;max-width:40vw;background:#171a22;color:#fff;border:1px solid #596171;border-radius:8px;padding:6px 8px;font-size:16px;font-weight:700}.partName:focus{outline:2px solid #5d83ff;outline-offset:1px}
-.saveBox{margin-top:18px;padding-top:16px;border-top:1px solid #343a48}
-.saveRow{display:flex;gap:8px;margin-top:10px}
-.saveName{flex:1;min-width:0;background:#11141b;color:#fff;border:1px solid #596171;border-radius:10px;padding:10px;font-size:16px}
-.smallBtn{width:auto!important;padding:10px 18px!important}
-.savedPractices{display:grid;gap:8px;margin-top:10px}
-.savedItem{display:flex;gap:8px;align-items:center}
-.savedItem button.openSaved{flex:1;text-align:left}
-.savedItem button.deleteSaved{width:auto;background:#6c3940}
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>YoYo Part Practice</title>
+<style>
+:root{--bg0:#080b12;--bg1:#0d1320;--panel:rgba(22,29,43,.78);--line:rgba(148,170,210,.18);--text:#f5f8ff;--muted:#aab5c9;--a1:#3978ff;--a2:#6b5cff;font-family:"Avenir Next","Helvetica Neue","Hiragino Sans","Yu Gothic UI",sans-serif;color-scheme:dark}
+*{box-sizing:border-box}body{margin:0;color:var(--text);background:radial-gradient(circle at 12% 4%,rgba(61,112,255,.17),transparent 28%),radial-gradient(circle at 92% 20%,rgba(116,76,255,.13),transparent 26%),linear-gradient(155deg,var(--bg1),var(--bg0) 58%,#070910);background-attachment:fixed}
+.app{max-width:760px;margin:auto;padding:18px 16px 40px}.title{font-size:25px;font-weight:800;margin:8px 0 4px;letter-spacing:-.04em}.card{background:linear-gradient(145deg,rgba(28,36,52,.88),rgba(16,21,32,.80));border:1px solid var(--line);border-radius:18px;padding:15px;margin:12px 0;box-shadow:0 16px 42px rgba(0,0,0,.24)}
+button,.file{border:1px solid rgba(255,255,255,.09);border-radius:13px;background:linear-gradient(135deg,var(--a1),var(--a2));color:#fff;font-weight:700;padding:12px 15px;font-size:15px;cursor:pointer;box-shadow:0 8px 20px rgba(25,70,190,.22)}.file{display:inline-block}input[type=file]{display:none}.row{display:flex;gap:9px;align-items:center;flex-wrap:wrap}.grow{flex:1}.small,.segtimes{font-size:12px;color:var(--muted)}.time{font-variant-numeric:tabular-nums;font-size:28px;font-weight:700}.bar{width:100%;accent-color:#668cff}.topActions{display:flex;gap:8px;flex-wrap:nowrap}.topActions>*{white-space:nowrap}.splitActions{display:flex;gap:10px;margin-top:12px}.splitActions button{width:50%}.segment{display:flex;align-items:center;gap:9px;padding:10px;border-radius:13px;background:linear-gradient(145deg,rgba(38,47,65,.8),rgba(26,33,47,.74));margin-top:8px}.segment.selected{outline:2px solid #5d83ff}.selectbox{width:22px;height:22px;accent-color:#5d83ff}.partName,.saveName,#loopDelay{background:rgba(7,11,18,.62);color:#fff;border:1px solid rgba(155,177,218,.32);border-radius:8px;padding:6px 8px;font-size:16px;font-weight:600}.partName{width:145px;max-width:40vw}.segment button{padding:8px 10px;font-size:13px}.empty{text-align:center;color:#7e8798;padding:14px}.danger,.deleteSaved{background:linear-gradient(135deg,#743f49,#5e343d)!important}.loopDelayLabel{display:flex;align-items:center;gap:5px}#loopDelay{width:58px;text-align:center;font-size:14px}.savedModal{position:fixed;inset:0;background:rgba(0,0,0,.68);z-index:9999;display:flex;align-items:center;justify-content:center;padding:22px}.savedModalBox{width:min(560px,100%);max-height:75vh;overflow:auto;background:#171a22;border:1px solid #3a4150;border-radius:18px;padding:18px}.savedModalHead{display:flex;align-items:center;justify-content:space-between;font-size:21px;margin-bottom:12px}.closeSaved{width:44px;height:44px;padding:0;font-size:28px}.saveName{width:100%;padding:10px}.savedPractices{display:grid;gap:8px}.savedItem{display:flex;gap:8px}.openSaved{flex:1;text-align:left}@media(max-width:480px){.time{font-size:24px}}
+</style></head><body><main class="app">
+<div class="title">YoYo Part Practice</div>
+<section class="card"><div class="row" style="margin-bottom:12px"><b>曲選択パート</b></div>
+<div class="topActions"><label class="file" id="newFileLabel">新規作成<input id="file" type="file" accept="audio/mpeg,audio/mp3,video/mp4,audio/mp4,.mp3,.mp4"></label><button id="savePracticeOpen">保存</button><button id="openSaved">保存データを開く</button></div><div id="loadstatus" class="small" style="margin-top:8px"></div></section>
+<section class="card"><div class="row" style="margin-bottom:10px"><b>分割パート</b></div><div class="row"><div id="current" class="time">0:00.00</div><div class="grow"></div><div id="duration" class="small">0:00.00</div></div><input id="seek" class="bar" type="range" min="0" max="1000" value="0"><div class="splitActions"><button id="play">再生</button><button id="cut">分割</button></div></section>
+<section class="card"><div class="row"><b>練習パート</b><div class="grow"></div><label class="small"><input id="loop" type="checkbox" checked> 選択範囲をループ</label><label class="small loopDelayLabel">無音 <input id="loopDelay" type="number" min="0" max="60" step="1" value="0"> 秒</label></div><div class="small" style="margin-top:8px">複数パートを選択すると、最初の選択パートから最後の選択パートまで通しで再生します。</div><button id="playSelected" style="width:100%;margin-top:10px">選択パートを通し再生</button><div id="segments"><div class="empty">曲を読み込むとパート1が表示されます</div></div><button id="reset" class="danger" style="width:100%;margin-top:12px">区切りをすべて削除</button></section>
+<div id="saveNameModal" class="savedModal" style="display:none"><div class="savedModalBox"><div class="savedModalHead"><b>保存名称</b><button id="closeSaveName" class="closeSaved">×</button></div><input id="saveName" class="saveName" placeholder="保存名（例：練習曲1）"><button id="savePractice" style="margin-top:12px">保存</button></div></div>
+<div id="savedPanel" class="savedModal" style="display:none"><div class="savedModalBox"><div class="savedModalHead"><b>保存データ</b><button id="closeSaved" class="closeSaved">×</button></div><div id="savedPracticesTop" class="savedPractices"></div></div></div>
+<video id="audio" playsinline preload="metadata" style="display:none"></video>
+</main><script>
+const $=id=>document.getElementById(id),audio=$('audio'),seek=$('seek');
+let cuts=[],partNames=[],selected=new Set(),playRange=null,currentSourceFile=null,objectUrl=null,loopTimer=null,loopWaiting=false;
+const fmt=t=>{if(!isFinite(t))return'0:00.00';let m=Math.floor(t/60),s=t-m*60;return `${m}:${s.toFixed(2).padStart(5,'0')}`};
 
-.savedModal{position:fixed;inset:0;background:rgba(0,0,0,.68);z-index:9999;display:flex;align-items:center;justify-content:center;padding:22px;box-sizing:border-box}
-.savedModalBox{width:min(560px,100%);max-height:75vh;overflow:auto;background:#171a22;border:1px solid #3a4150;border-radius:18px;padding:18px;box-sizing:border-box}
-.savedModalHead{display:flex;align-items:center;justify-content:space-between;font-size:21px;margin-bottom:12px}
-.closeSaved{width:44px!important;height:44px;padding:0!important;border-radius:12px;background:#343a48;color:#fff;font-size:28px;line-height:1}
+function loadFile(f){
+ if(!f)return;
+ audio.pause(); clearTimeout(loopTimer); loopWaiting=false;
+ if(objectUrl)URL.revokeObjectURL(objectUrl);
+ currentSourceFile=f; objectUrl=URL.createObjectURL(f);
+ audio.removeAttribute('src'); audio.src=objectUrl; audio.load();
+ cuts=[];partNames=[];selected.clear();playRange=null;
+ $('loadstatus').textContent='読み込み中…'; renderSegments();
+}
+$('file').addEventListener('change',e=>{const f=e.target.files?.[0];if(f)loadFile(f)});
+// Important: clear the picker BEFORE every new selection, so a second song and even the same file can be opened after saving.
+$('newFileLabel').addEventListener('click',()=>{$('file').value='';});
 
-.loopDelayLabel{display:flex;align-items:center;gap:5px}
-#loopDelay{width:58px;background:#11141b;color:#fff;border:1px solid #596171;border-radius:8px;padding:5px;text-align:center;font-size:14px}
-
-.saveTopBtn{width:auto!important;margin-left:10px;padding-left:22px!important;padding-right:22px!important}
-
-.topActions{display:flex;align-items:center;gap:8px;flex-wrap:nowrap}
-.topActions button,.topActions label{width:auto!important;margin:0!important;white-space:nowrap;padding-left:14px!important;padding-right:14px!important}
-.openTopBtn{font-size:14px!important}
-.splitActions{display:flex;gap:10px;margin-top:12px}
-.splitActions button{width:calc(50% - 5px)!important;margin:0!important}
-
-/* ===== v30 visual theme: functionality unchanged ===== */
-:root{
-  --bg0:#080b12;
-  --bg1:#0d1320;
-  --panel:rgba(22,29,43,.78);
-  --panel2:rgba(28,37,54,.72);
-  --line:rgba(148,170,210,.18);
-  --text:#f5f8ff;
-  --muted:#aab5c9;
-  --accent1:#3978ff;
-  --accent2:#6b5cff;
-}
-html{background:var(--bg0)}
-body{
-  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Helvetica Neue","Noto Sans JP",sans-serif!important;
-  color:var(--text)!important;
-  background:
-    radial-gradient(circle at 12% 4%,rgba(61,112,255,.17),transparent 28%),
-    radial-gradient(circle at 92% 20%,rgba(116,76,255,.13),transparent 26%),
-    linear-gradient(155deg,var(--bg1) 0%,var(--bg0) 58%,#070910 100%)!important;
-  background-attachment:fixed!important;
-  letter-spacing:.01em;
-}
-h1{
-  font-weight:800!important;
-  letter-spacing:-.035em!important;
-  text-shadow:0 4px 22px rgba(75,116,255,.20);
-}
-.card{
-  background:linear-gradient(145deg,rgba(28,36,52,.88),rgba(16,21,32,.80))!important;
-  border:1px solid var(--line)!important;
-  box-shadow:0 16px 42px rgba(0,0,0,.24),inset 0 1px 0 rgba(255,255,255,.035)!important;
-  backdrop-filter:blur(14px);
-  -webkit-backdrop-filter:blur(14px);
-}
-.card b{font-weight:760;letter-spacing:-.015em}
-.small,.segtimes{color:var(--muted)!important}
-button,.primary,.cut{
-  font-family:inherit!important;
-  font-weight:750!important;
-  letter-spacing:-.01em!important;
-  border:1px solid rgba(255,255,255,.09)!important;
-  box-shadow:0 8px 20px rgba(25,70,190,.22),inset 0 1px 0 rgba(255,255,255,.16)!important;
-  background:linear-gradient(135deg,var(--accent1),var(--accent2))!important;
-  transition:transform .12s ease,filter .12s ease,box-shadow .12s ease;
-}
-button:active,.primary:active,.cut:active{
-  transform:scale(.975);
-  filter:brightness(1.08);
-  box-shadow:0 4px 12px rgba(25,70,190,.20)!important;
-}
-button.deleteSaved,#reset,.deleteSaved{
-  background:linear-gradient(135deg,#743f49,#5e343d)!important;
-  box-shadow:0 7px 18px rgba(70,20,30,.22)!important;
-}
-.partName,.saveName,#loopDelay{
-  font-family:inherit!important;
-  background:rgba(7,11,18,.62)!important;
-  border:1px solid rgba(155,177,218,.32)!important;
-  box-shadow:inset 0 1px 5px rgba(0,0,0,.22);
-}
-.partName:focus,.saveName:focus,#loopDelay:focus{
-  border-color:rgba(105,140,255,.85)!important;
-  box-shadow:0 0 0 3px rgba(75,112,255,.14)!important;
-  outline:none!important;
-}
-.segment{
-  background:linear-gradient(145deg,rgba(38,47,65,.80),rgba(26,33,47,.74))!important;
-  border:1px solid rgba(255,255,255,.035);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.025);
-}
-.segment.selected{
-  border-color:rgba(104,139,255,.92)!important;
-  box-shadow:0 0 0 2px rgba(87,124,255,.22),0 8px 22px rgba(24,56,140,.18)!important;
-}
-input[type="range"]{accent-color:#668cff}
-.savedModal{backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px)}
-.savedModalBox{
-  background:linear-gradient(145deg,rgba(27,35,51,.98),rgba(13,18,28,.98))!important;
-  border:1px solid rgba(157,177,216,.22)!important;
-  box-shadow:0 26px 70px rgba(0,0,0,.55)!important;
-}
-
-
-/* ===== v31 typography refinement ===== */
-body{
-  font-family:"Avenir Next","Helvetica Neue","Hiragino Sans","Yu Gothic UI","Noto Sans JP",sans-serif!important;
-  font-weight:500;
-}
-h1{
-  font-family:"Avenir Next","Helvetica Neue","Hiragino Sans",sans-serif!important;
-  font-weight:800!important;
-  letter-spacing:-.045em!important;
-}
-.card b{
-  font-family:"Avenir Next","Hiragino Sans","Yu Gothic UI",sans-serif!important;
-  font-weight:700!important;
-  letter-spacing:.01em!important;
-}
-button,.primary,.cut{
-  font-family:"Avenir Next","Hiragino Sans","Yu Gothic UI",sans-serif!important;
-  font-weight:700!important;
-  letter-spacing:.015em!important;
-}
-.partName,.saveName,#loopDelay{
-  font-family:"Avenir Next","Hiragino Sans","Yu Gothic UI",sans-serif!important;
-  font-weight:600!important;
-}
-.time,#current{
-  font-family:"Avenir Next","Helvetica Neue",sans-serif!important;
-  font-weight:700!important;
-  letter-spacing:-.025em!important;
-}
-.small,.segtimes{
-  font-family:"Avenir Next","Hiragino Sans","Yu Gothic UI",sans-serif!important;
-  font-weight:500!important;
-  letter-spacing:.015em!important;
-}
-
-</style></head><body><main class="app"><div class="title">🪀 YoYo Part Practice</div>
-<section class="card"><div class="row" style="margin-bottom:12px"><b>曲選択パート</b></div><div class="row"><div class="topActions"><label class="file">新規作成<input id="file" type="file" accept="audio/mpeg,audio/mp3,video/mp4,audio/mp4,.mp3,.mp4"></label><button id="savePracticeOpen" class="primary saveTopBtn">保存</button><button id="openSaved" class="primary openTopBtn">📂 保存データを開く</button></div><div id="loadstatus" class="small" style="width:100%;margin-top:8px"></div></div>
-<div style="margin-top:12px">
-  
-  
-<div id="saveNameModal" class="savedModal" style="display:none">
-  <div class="savedModalBox">
-    <div class="savedModalHead"><b>保存名称</b><button id="closeSaveName" class="closeSaved">×</button></div>
-    <input id="saveName" class="saveName" placeholder="保存名（例：練習曲1）">
-    <button id="savePractice" class="primary" style="margin-top:12px">保存</button>
-  </div>
-</div>
-<div id="savedPanel" class="savedModal" style="display:none">
-  <div class="savedModalBox">
-    <div class="savedModalHead"><b>保存データ</b><button id="closeSaved" class="closeSaved">×</button></div>
-    <div id="savedPracticesTop" class="savedPractices"></div>
-  </div>
-</div>
-</div>
-
-
-</section>
-<section class="card"><div class="row" style="margin-bottom:10px"><b>分割パート</b></div><div class="row"><div id="current" class="time">0:00.00</div><div class="grow"></div><div id="duration" class="small">0:00.00</div></div><input id="seek" class="bar" type="range" min="0" max="1000" value="0"><div class="controls"><div class="splitActions"><button id="play" class="play">▶ 再生</button><button id="cut" class="cut">✂️ 分割</button></div></div></section>
-
-<section class="card"><div class="row"><b>練習パート</b><div class="grow"></div><label class="small"><input id="loop" type="checkbox" checked> 選択範囲をループ</label><label class="small loopDelayLabel">無音 <input id="loopDelay" type="number" min="0" max="60" step="1" value="0"> 秒</label></div><div class="small" style="margin-top:8px">複数パートを選択すると、最初の選択パートから最後の選択パートまで通しで再生します。</div><button id="playSelected" style="width:100%;margin-top:10px">▶ 選択パートを通し再生</button><div id="segments"><div class="empty">曲を読み込むとパート1が表示されます</div></div><button id="reset" class="danger" style="width:100%;margin-top:12px">区切りをすべて削除</button>
-
-</section>
-<video id="audio" playsinline preload="metadata" style="display:none"></video></main><script>
-const $=id=>document.getElementById(id),audio=$('audio'),seek=$('seek');let cuts=[],activeIndex=null,selected=new Set(),playRange=null,partNames=[];const fmt=t=>{if(!isFinite(t))return'0:00.00';let m=Math.floor(t/60),s=t-m*60;return `${m}:${s.toFixed(2).padStart(5,'0')}`};
-let objectUrl=null;
-$('file').onchange=e=>{currentSourceFile=e.target.files&&e.target.files[0]?e.target.files[0]:null;let f=e.target.files&&e.target.files[0];if(!f)return;let ext=(f.name.split('.').pop()||'').toLowerCase();if(!['mp3','mp4'].includes(ext))return alert('');audio.pause();if(objectUrl)URL.revokeObjectURL(objectUrl);objectUrl=URL.createObjectURL(f);audio.removeAttribute('src');audio.src=objectUrl;audio.load();$('filename').textContent=f.name;$('loadstatus').textContent='読み込み中…';cuts=[];partNames=[];activeIndex=null;selected.clear();playRange=null;renderSegments()};
-audio.onloadedmetadata=()=>{$('duration').textContent=fmt(audio.duration);$('loadstatus').textContent='✓ 読み込み完了（Bluetoothイヤホン接続時はiPhoneの音声出力先に従います）';renderSegments()};
-audio.onerror=()=>{$('loadstatus').textContent='このファイルを再生できません。MP3、またはH.264/AACなどiPhoneで再生可能なMP4を選択してください。';alert('ファイルを読み込めませんでした。MP3またはiPhoneで再生可能なMP4を選択してください。')};
-let loopDelayTimer=null,loopWaiting=false;
+audio.onloadedmetadata=()=>{$('duration').textContent=fmt(audio.duration);$('loadstatus').textContent='読み込み完了';renderSegments()};
+audio.onerror=()=>{$('loadstatus').textContent='このファイルを再生できません。MP3またはiPhoneで再生可能なMP4を選択してください。'};
 audio.ontimeupdate=()=>{
-  $('current').textContent=fmt(audio.currentTime);
-  seek.value=audio.duration?audio.currentTime/audio.duration*1000:0;
-  if(playRange&&audio.currentTime>=playRange.end-.03&&!loopWaiting){
-    if($('loop').checked){
-      const start=playRange.start;
-      audio.pause();
-      audio.currentTime=playRange.end;
-      loopWaiting=true;
-      clearTimeout(loopDelayTimer);
-      const delay=Math.max(0,Math.min(60,parseFloat($('loopDelay').value)||0))*1000;
-      loopDelayTimer=setTimeout(()=>{
-        loopWaiting=false;
-        if(playRange&&$('loop').checked){
-          audio.currentTime=start;
-          audio.play();
-        }
-      },delay);
-    }else{
-      audio.pause();
-      audio.currentTime=playRange.end;
-      playRange=null;
-    }
-  }
+ $('current').textContent=fmt(audio.currentTime); seek.value=audio.duration?audio.currentTime/audio.duration*1000:0;
+ if(playRange&&audio.currentTime>=playRange.end-.03&&!loopWaiting){
+  if($('loop').checked){const start=playRange.start;audio.pause();audio.currentTime=playRange.end;loopWaiting=true;clearTimeout(loopTimer);const delay=Math.max(0,Math.min(60,+$('loopDelay').value||0))*1000;loopTimer=setTimeout(()=>{loopWaiting=false;if(playRange&&$('loop').checked){audio.currentTime=start;audio.play()}},delay)}
+  else{audio.pause();audio.currentTime=playRange.end;playRange=null}
+ }
 };
 seek.oninput=()=>{if(audio.duration)audio.currentTime=seek.value/1000*audio.duration};
-$('play').onclick=()=>{if(!audio.src)return alert('先に曲を読み込んでください');audio.paused?audio.play():audio.pause()};audio.onplay=()=>$('play').textContent='⏸ 一時停止';audio.onpause=()=>$('play').textContent='▶ 再生';
-$('cut').onclick=()=>{if(!audio.src||!isFinite(audio.duration))return alert('先に曲を読み込んでください');let t=audio.currentTime;if(t<.15||t>audio.duration-.15)return alert('曲の開始・終了付近では区切れません');if(cuts.some(x=>Math.abs(x-t)<.15))return alert('ほぼ同じ位置に区切りがあります');cuts.push(t);cuts.sort((a,b)=>a-b);activeIndex=null;selected.clear();playRange=null;renderSegments()};
-function getSegments(){if(!isFinite(audio.duration))return[];let pts=[0,...cuts,audio.duration];return pts.slice(0,-1).map((s,i)=>({start:s,end:pts[i+1],name:partNames[i]||('パート'+(i+1))}))}
-function renderSegments(){let box=$('segments'),segs=getSegments();box.innerHTML='';if(!segs.length){box.innerHTML='<div class="empty">曲を読み込むとパート1が表示されます</div>';return}segs.forEach((x,i)=>{let d=document.createElement('div');d.className='segment'+(selected.has(i)?' selected':'');d.innerHTML=`<input class="selectbox" type="checkbox" ${selected.has(i)?'checked':''}><div class="grow"><input class="partName" value="${x.name}" aria-label="パート${i+1}の名称"><div class="segtimes">${fmt(x.start)} → ${fmt(x.end)}</div></div><button class="go">▶ 練習</button>${i<segs.length-1?'<button class="del">区切り削除</button>':''}`;let name=d.querySelector('.partName');name.onchange=()=>{partNames[i]=name.value.trim()||('パート'+(i+1));name.value=partNames[i]};let cb=d.querySelector('.selectbox');cb.onchange=()=>{
-      if(cb.checked) selected.add(i); else selected.delete(i);
-      if(selected.size>=2){
-        const nums=[...selected].sort((a,b)=>a-b);
-        const first=nums[0], last=nums[nums.length-1];
-        for(let n=first;n<=last;n++) selected.add(n);
-      }
-      playRange=null;
-      renderSegments();
-    };d.querySelector('.go').onclick=()=>{clearTimeout(loopDelayTimer);loopWaiting=false;activeIndex=i;playRange={start:x.start,end:x.end};audio.currentTime=x.start;audio.play()};let del=d.querySelector('.del');if(del)del.onclick=()=>{cuts.splice(i,1);partNames.splice(i+1,1);activeIndex=null;selected.clear();playRange=null;renderSegments()};box.appendChild(d)})}
-$('playSelected').onclick=()=>{clearTimeout(loopDelayTimer);loopWaiting=false;let segs=getSegments();if(!segs.length)return alert('先に曲を読み込んでください');if(!selected.size)return alert('再生したいパートを選択してください');let ids=[...selected].sort((a,b)=>a-b),first=ids[0],last=ids[ids.length-1];playRange={start:segs[first].start,end:segs[last].end};activeIndex=null;audio.currentTime=playRange.start;audio.play()};$('reset').onclick=()=>{if(!cuts.length)return;if(!confirm('本当に区切りをすべて削除しますか？'))return;cuts=[];partNames=[];activeIndex=null;selected.clear();playRange=null;renderSegments()};
-renderSegments();
+$('play').onclick=()=>{if(!audio.src)return alert('先に曲を読み込んでください');audio.paused?audio.play():audio.pause()};
+audio.onplay=()=>$('play').textContent='一時停止'; audio.onpause=()=>$('play').textContent='再生';
+$('cut').onclick=()=>{if(!audio.src||!isFinite(audio.duration))return alert('先に曲を読み込んでください');let t=audio.currentTime;if(t<.15||t>audio.duration-.15)return alert('曲の開始・終了付近では区切れません');if(cuts.some(x=>Math.abs(x-t)<.15))return;cuts.push(t);cuts.sort((a,b)=>a-b);selected.clear();playRange=null;renderSegments()};
+function getSegments(){if(!isFinite(audio.duration))return[];let pts=[0,...cuts,audio.duration];return pts.slice(0,-1).map((s,i)=>({start:s,end:pts[i+1],name:partNames[i]||`パート${i+1}`}))}
+function renderSegments(){
+ const box=$('segments'),segs=getSegments();box.innerHTML='';
+ if(!segs.length){box.innerHTML='<div class="empty">曲を読み込むとパート1が表示されます</div>';return}
+ segs.forEach((x,i)=>{const d=document.createElement('div');d.className='segment'+(selected.has(i)?' selected':'');
+ d.innerHTML=`<input class="selectbox" type="checkbox" ${selected.has(i)?'checked':''}><div class="grow"><input class="partName" value="${x.name.replaceAll('"','&quot;')}"><div class="segtimes">${fmt(x.start)} → ${fmt(x.end)}</div></div><button class="go">再生</button>${i<segs.length-1?'<button class="del">削除</button>':''}`;
+ const name=d.querySelector('.partName');name.onchange=()=>{partNames[i]=name.value.trim()||`パート${i+1}`};
+ const cb=d.querySelector('.selectbox');cb.onchange=()=>{cb.checked?selected.add(i):selected.delete(i);if(selected.size>=2){let a=[...selected].sort((a,b)=>a-b);for(let n=a[0];n<=a.at(-1);n++)selected.add(n)}playRange=null;renderSegments()};
+ d.querySelector('.go').onclick=()=>{clearTimeout(loopTimer);loopWaiting=false;playRange={start:x.start,end:x.end};audio.currentTime=x.start;audio.play()};
+ const del=d.querySelector('.del');if(del)del.onclick=()=>{cuts.splice(i,1);partNames.splice(i+1,1);selected.clear();playRange=null;renderSegments()};
+ box.appendChild(d);
+ })}
+$('playSelected').onclick=()=>{let segs=getSegments();if(!segs.length)return alert('先に曲を読み込んでください');if(!selected.size)return alert('再生したいパートを選択してください');let ids=[...selected].sort((a,b)=>a-b);playRange={start:segs[ids[0]].start,end:segs[ids.at(-1)].end};audio.currentTime=playRange.start;audio.play()};
+$('reset').onclick=()=>{if(cuts.length&&confirm('本当に区切りをすべて削除しますか？')){cuts=[];partNames=[];selected.clear();playRange=null;renderSegments()}};
 
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js?v=9').catch(()=>{}));
-}
-
-// Saved practice data: audio/video blob + cuts + names, for one-tap recall.
-const PRACTICE_META_KEY='yoyoPracticeSavedV2';
-const PRACTICE_DB='YoYoPracticeFilesV2';
-const PRACTICE_STORE='files';
-
-let currentSourceFile=null;
-document.getElementById('file').addEventListener('change',e=>{
-  const f=e.target.files&&e.target.files[0];
-  if(f) currentSourceFile=f;
-});
-
-
-function openPracticeDB(){
-  return new Promise((resolve,reject)=>{
-    const req=indexedDB.open(PRACTICE_DB,1);
-    req.onupgradeneeded=()=>{ if(!req.result.objectStoreNames.contains(PRACTICE_STORE)) req.result.createObjectStore(PRACTICE_STORE); };
-    req.onsuccess=()=>resolve(req.result);
-    req.onerror=()=>reject(req.error);
-  });
-}
-async function putPracticeFile(key,file){
-  const db=await openPracticeDB();
-  return new Promise((resolve,reject)=>{
-    const tx=db.transaction(PRACTICE_STORE,'readwrite');
-    tx.objectStore(PRACTICE_STORE).put(file,key);
-    tx.oncomplete=()=>resolve();
-    tx.onerror=()=>reject(tx.error);
-  });
-}
-async function getPracticeFile(key){
-  const db=await openPracticeDB();
-  return new Promise((resolve,reject)=>{
-    const req=db.transaction(PRACTICE_STORE).objectStore(PRACTICE_STORE).get(key);
-    req.onsuccess=()=>resolve(req.result);
-    req.onerror=()=>reject(req.error);
-  });
-}
-async function deletePracticeFile(key){
-  const db=await openPracticeDB();
-  return new Promise((resolve,reject)=>{
-    const tx=db.transaction(PRACTICE_STORE,'readwrite');
-    tx.objectStore(PRACTICE_STORE).delete(key);
-    tx.oncomplete=()=>resolve();
-    tx.onerror=()=>reject(tx.error);
-  });
-}
-function savedMeta(){try{return JSON.parse(localStorage.getItem(PRACTICE_META_KEY)||'[]')}catch(e){return []}}
-function writeMeta(a){localStorage.setItem(PRACTICE_META_KEY,JSON.stringify(a))}
-function renderSavedPractices(){
-  const box=document.getElementById('savedPracticesTop'); if(!box)return;
-  const a=savedMeta();
-  box.innerHTML=a.length?'':'<div class="small">保存データはありません</div>';
-  a.forEach(p=>{
-    const row=document.createElement('div'); row.className='savedItem';
-    const op=document.createElement('button'); op.className='primary openSaved'; op.textContent='▶ '+p.name;
-    op.onclick=async()=>{
-      const stored=await getPracticeFile(p.fileKey);
-      if(!stored){alert('保存した曲データが見つかりません。曲を読み直して再保存してください。');return}
-      const f=stored instanceof File ? stored : new File([stored],p.fileName||'practice-media',{type:p.fileType||stored.type||''});
-      if(objectUrl)URL.revokeObjectURL(objectUrl);
-      objectUrl=URL.createObjectURL(f); currentSourceFile=f;
-      audio.src=objectUrl;
-      audio.load();
-      cuts=[...(p.cuts||[])]; partNames=[...(p.partNames||[])];
-      activeIndex=null; selected.clear(); playRange=null;
-      audio.onloadedmetadata=()=>{renderSegments();audio.currentTime=0;updateUI&&updateUI()};
-      document.getElementById('savedPanel').style.display='none';
-    };
-    const del=document.createElement('button'); del.className='deleteSaved'; del.textContent='削除';
-    del.onclick=async()=>{
-      if(!confirm('この保存データを削除しますか？'))return;
-      await deletePracticeFile(p.fileKey);
-      writeMeta(savedMeta().filter(x=>x.id!==p.id)); renderSavedPractices();
-    };
-    row.append(op,del); box.appendChild(row);
-  });
-}
-document.getElementById('savePracticeOpen').onclick=()=>{
-  document.getElementById('saveName').value='';
-  document.getElementById('saveNameModal').style.display='flex';
-  setTimeout(()=>document.getElementById('saveName').focus(),50);
+const META='yoyoPracticeSavedV2',DB='YoYoPracticeFilesV2',STORE='files';
+function db(){return new Promise((ok,no)=>{let r=indexedDB.open(DB,1);r.onupgradeneeded=()=>{if(!r.result.objectStoreNames.contains(STORE))r.result.createObjectStore(STORE)};r.onsuccess=()=>ok(r.result);r.onerror=()=>no(r.error)})}
+async function put(k,v){let d=await db();return new Promise((ok,no)=>{let t=d.transaction(STORE,'readwrite');t.objectStore(STORE).put(v,k);t.oncomplete=ok;t.onerror=()=>no(t.error)})}
+async function get(k){let d=await db();return new Promise((ok,no)=>{let r=d.transaction(STORE).objectStore(STORE).get(k);r.onsuccess=()=>ok(r.result);r.onerror=()=>no(r.error)})}
+async function del(k){let d=await db();return new Promise((ok,no)=>{let t=d.transaction(STORE,'readwrite');t.objectStore(STORE).delete(k);t.oncomplete=ok;t.onerror=()=>no(t.error)})}
+const meta=()=>{try{return JSON.parse(localStorage.getItem(META)||'[]')}catch{return[]}},write=a=>localStorage.setItem(META,JSON.stringify(a));
+function renderSaved(){let b=$('savedPracticesTop'),a=meta();b.innerHTML=a.length?'':'<div class="small">保存データはありません</div>';a.forEach(p=>{let r=document.createElement('div');r.className='savedItem';let o=document.createElement('button');o.className='openSaved';o.textContent=p.name;o.onclick=async()=>{let s=await get(p.fileKey);if(!s)return alert('保存した曲データが見つかりません');let f=s instanceof File?s:new File([s],p.fileName||'practice-media',{type:p.fileType||s.type||''});if(objectUrl)URL.revokeObjectURL(objectUrl);currentSourceFile=f;objectUrl=URL.createObjectURL(f);audio.src=objectUrl;cuts=[...(p.cuts||[])];partNames=[...(p.partNames||[])];selected.clear();playRange=null;audio.load();$('savedPanel').style.display='none'};let x=document.createElement('button');x.className='deleteSaved';x.textContent='削除';x.onclick=async()=>{if(confirm('この保存データを削除しますか？')){await del(p.fileKey);write(meta().filter(v=>v.id!==p.id));renderSaved()}};r.append(o,x);b.append(r)})}
+$('savePracticeOpen').onclick=()=>{$('saveName').value='';$('saveNameModal').style.display='flex'};
+$('closeSaveName').onclick=()=>$('saveNameModal').style.display='none';
+$('savePractice').onclick=async()=>{let name=$('saveName').value.trim();if(!name)return alert('保存名を入力してください');if(!currentSourceFile)return alert('先にMP3 / MP4を読み込んでください');let id=Date.now().toString(),key='file_'+id;await put(key,currentSourceFile);let a=meta();a.unshift({id,name,fileKey:key,fileName:currentSourceFile.name,fileType:currentSourceFile.type,cuts:[...cuts],partNames:[...partNames]});write(a);$('saveNameModal').style.display='none';renderSaved();
+ // Ensure next New File action is never blocked by the previous file selection.
+ $('file').value='';
 };
-document.getElementById('closeSaveName').onclick=()=>{document.getElementById('saveNameModal').style.display='none'};
-document.getElementById('saveNameModal').onclick=e=>{if(e.target.id==='saveNameModal')e.currentTarget.style.display='none'};
-document.getElementById('savePractice').onclick=async()=>{
-  const name=document.getElementById('saveName').value.trim();
-  if(!name){alert('保存名を入力してください');return}
-  if(!currentSourceFile){alert('先にMP3 / MP4を読み込んでください');return}
-  const id=Date.now().toString(), fileKey='file_'+id;
-  await putPracticeFile(fileKey,currentSourceFile);
-  const verifyFile=await getPracticeFile(fileKey);
-  if(!verifyFile){alert('曲ファイルの保存に失敗しました');return}
-  const a=savedMeta(); a.unshift({id,name,fileKey,fileName:currentSourceFile.name||'practice-media',fileType:currentSourceFile.type||'',cuts:[...cuts],partNames:[...partNames]});
-  writeMeta(a); document.getElementById('saveName').value=''; document.getElementById('saveNameModal').style.display='none'; renderSavedPractices();
-};
-document.getElementById('openSaved').onclick=()=>{
-  const p=document.getElementById('savedPanel');
-  p.style.display='flex';
-  renderSavedPractices();
-};
-document.getElementById('closeSaved').onclick=()=>{document.getElementById('savedPanel').style.display='none'};
-document.getElementById('savedPanel').onclick=e=>{if(e.target.id==='savedPanel')e.currentTarget.style.display='none'};
-renderSavedPractices();
-</script>
+$('openSaved').onclick=()=>{$('savedPanel').style.display='flex';renderSaved()};
+$('closeSaved').onclick=()=>$('savedPanel').style.display='none';
+$('saveNameModal').onclick=e=>{if(e.target===$('saveNameModal'))$('saveNameModal').style.display='none'};
+$('savedPanel').onclick=e=>{if(e.target===$('savedPanel'))$('savedPanel').style.display='none'};
+renderSegments();renderSaved();
+</script></body></html>
