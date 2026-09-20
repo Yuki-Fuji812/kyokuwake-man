@@ -163,6 +163,20 @@ button,.primary,.cut,#reset,.deleteSaved{border:2px solid rgba(255,255,255,.92)!
   border:2px solid rgba(255,255,255,.92)!important;
 }
 
+
+/* v34: per-part action labels stay on one line */
+.segment .go,
+.segment .del{
+  white-space:nowrap!important;
+  word-break:keep-all!important;
+  overflow-wrap:normal!important;
+  line-height:1.15!important;
+  font-size:16px!important;
+  padding-left:10px!important;
+  padding-right:10px!important;
+  min-width:82px!important;
+}
+
 </style></head><body><main class="app"><div class="title">🪀 YoYo Part Practice</div>
 <section class="card"><div class="row" style="margin-bottom:12px"><b>曲選択</b></div><div class="row"><div class="topActions"><label class="file">新規作成<input id="file" type="file" accept="audio/mpeg,audio/mp3,video/mp4,audio/mp4,.mp3,.mp4"></label><button id="savePracticeOpen" class="primary saveTopBtn" onclick="openSaveNameModal()">保存</button><button id="openSaved" class="primary openTopBtn">📂 保存データを開く</button></div><div id="loadstatus" class="small" style="width:100%;margin-top:8px"></div></div>
 <div style="margin-top:12px">
@@ -193,7 +207,10 @@ button,.primary,.cut,#reset,.deleteSaved{border:2px solid rgba(255,255,255,.92)!
 <video id="audio" playsinline preload="metadata" style="display:none"></video></main><script>
 const $=id=>document.getElementById(id),audio=$('audio'),seek=$('seek');let cuts=[],activeIndex=null,selected=new Set(),playRange=null,partNames=[];const fmt=t=>{if(!isFinite(t))return'0:00.00';let m=Math.floor(t/60),s=t-m*60;return `${m}:${s.toFixed(2).padStart(5,'0')}`};
 let objectUrl=null;
-$('file').onchange=e=>{currentSourceFile=e.target.files&&e.target.files[0]?e.target.files[0]:null;let f=e.target.files&&e.target.files[0];if(!f)return;let ext=(f.name.split('.').pop()||'').toLowerCase();if(!['mp3','mp4'].includes(ext))return alert('');audio.pause();if(objectUrl)URL.revokeObjectURL(objectUrl);objectUrl=URL.createObjectURL(f);audio.removeAttribute('src');audio.src=objectUrl;audio.load();$('filename').textContent=f.name;$('loadstatus').textContent='読み込み中…';cuts=[];partNames=[];activeIndex=null;selected.clear();playRange=null;renderSegments()};
+$('file').onchange=e=>{currentSourceFile=e.target.files&&e.target.files[0]?e.target.files[0]:null;let f=e.target.files&&e.target.files[0];if(!f)return;let ext=(f.name.split('.').pop()||'').toLowerCase();if(!['mp3','mp4'].includes(ext))return alert('');audio.pause();if(objectUrl)URL.revokeObjectURL(objectUrl);objectUrl=URL.createObjectURL(f);audio.removeAttribute('src');audio.src=objectUrl;audio.load();$('filename').textContent=f.name;$('loadstatus').textContent='読み込み中…';
+cuts=[];partNames=[];selected.clear();activeIndex=null;playRange=null;
+if(typeof loopDelayTimer!=='undefined')clearTimeout(loopDelayTimer);
+if(typeof loopWaiting!=='undefined')loopWaiting=false;selected.clear();playRange=null;renderSegments()};
 audio.onloadedmetadata=()=>{$('duration').textContent=fmt(audio.duration);$('loadstatus').textContent='✓ 読み込み完了（Bluetoothイヤホン接続時はiPhoneの音声出力先に従います）';renderSegments()};
 audio.onerror=()=>{$('loadstatus').textContent='このファイルを再生できません。MP3、またはH.264/AACなどiPhoneで再生可能なMP4を選択してください。';alert('ファイルを読み込めませんでした。MP3またはiPhoneで再生可能なMP4を選択してください。')};
 let loopDelayTimer=null,loopWaiting=false;
