@@ -211,6 +211,19 @@ button.deleteSaved,.deleteSaved{
 @keyframes songTitleMarquee{from{transform:translateX(0)}to{transform:translateX(-100%)}}
 .segment .del.holding{filter:brightness(1.3)!important;transform:scale(.96)}
 
+
+/* v36: prevent accidental text selection during long-press */
+button, .file, .segment, .selectbox, .segtimes, .small, b, .title {
+  -webkit-user-select:none!important;
+  user-select:none!important;
+  -webkit-touch-callout:none!important;
+}
+input[type="text"], input[type="number"], .partName, .saveName {
+  -webkit-user-select:text!important;
+  user-select:text!important;
+  -webkit-touch-callout:default!important;
+}
+
 </style></head><body><main class="app"><div class="title">🪀 YoYo Part Practice</div>
 <section class="card"><div class="row" style="margin-bottom:12px"><b>曲選択</b></div><div class="row"><div class="topActions"><label class="file">新規作成<input id="file" type="file" accept="audio/mpeg,audio/mp3,video/mp4,audio/mp4,.mp3,.mp4"></label><button id="savePracticeOpen" class="primary saveTopBtn" onclick="openSaveNameModal()">保存</button><button id="openSaved" class="primary openTopBtn">📂 保存データを開く</button></div><div id="loadstatus" class="small" style="width:100%;margin-top:8px"></div></div>
 <div style="margin-top:12px">
@@ -438,4 +451,10 @@ document.getElementById('openSaved').onclick=()=>{
 document.getElementById('closeSaved').onclick=()=>{document.getElementById('savedPanel').style.display='none'};
 document.getElementById('savedPanel').onclick=e=>{if(e.target.id==='savedPanel')e.currentTarget.style.display='none'};
 renderSavedPractices();
+
+// Prevent iOS long-press text/callout behavior on part delete buttons.
+document.addEventListener('contextmenu', e=>{
+  if(e.target && e.target.closest && e.target.closest('.segment .del')) e.preventDefault();
+});
+
 </script>
