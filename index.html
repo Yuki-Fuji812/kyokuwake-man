@@ -204,6 +204,13 @@ button.deleteSaved,.deleteSaved{
   .segment .go,.segment .del{font-size:12px!important;padding:8px 7px!important}
 }
 
+/* v36: song title marquee + hold-to-delete */
+.songTitleWrap{min-width:0;width:100%;overflow:hidden;white-space:nowrap;margin-bottom:10px}
+.songTitle{display:inline-block;min-width:100%;font-size:22px;font-weight:700;white-space:nowrap}
+.songTitle.scrolling{min-width:auto;padding-left:100%;animation:songTitleMarquee 12s linear infinite}
+@keyframes songTitleMarquee{from{transform:translateX(0)}to{transform:translateX(-100%)}}
+.segment .del.holding{filter:brightness(1.3)!important;transform:scale(.96)}
+
 </style></head><body><main class="app"><div class="title">🪀 YoYo Part Practice</div>
 <section class="card"><div class="row" style="margin-bottom:12px"><b>曲選択</b></div><div class="row"><div class="topActions"><label class="file">新規作成<input id="file" type="file" accept="audio/mpeg,audio/mp3,video/mp4,audio/mp4,.mp3,.mp4"></label><button id="savePracticeOpen" class="primary saveTopBtn" onclick="openSaveNameModal()">保存</button><button id="openSaved" class="primary openTopBtn">📂 保存データを開く</button></div><div id="loadstatus" class="small" style="width:100%;margin-top:8px"></div></div>
 <div style="margin-top:12px">
@@ -226,7 +233,7 @@ button.deleteSaved,.deleteSaved{
 
 
 </section>
-<section class="card"><div class="row" style="margin-bottom:10px"><b>曲分割</b></div><div class="row"><div id="current" class="time">0:00.00</div><div class="grow"></div><div id="duration" class="small">0:00.00</div></div><input id="seek" class="bar" type="range" min="0" max="1000" value="0"><div class="controls"><div class="splitActions"><button id="play" class="play">▶ 再生</button><button id="cut" class="cut">✂️ 分割</button></div></div></section>
+<section class="card"><div class="songTitleWrap"><div id="songTitle" class="songTitle">曲を選択してください</div></div><div class="row"><div id="current" class="time">0:00.00</div><div class="grow"></div><div id="duration" class="small">0:00.00</div></div><input id="seek" class="bar" type="range" min="0" max="1000" value="0"><div class="controls"><div class="splitActions"><button id="play" class="play">▶ 再生</button><button id="cut" class="cut">✂️ 分割</button></div></div></section>
 
 <section class="card"><div class="row"><b>再生</b><div class="grow"></div><label class="small"><input id="loop" type="checkbox" checked> 選択範囲をループ</label><label class="small loopDelayLabel">インターバル <input id="loopDelay" type="number" min="0" max="60" step="1" value="0"> 秒</label></div><div class="small" style="margin-top:8px">複数パートを選択すると、最初の選択パートから最後の選択パートまで通しで再生します。</div><button id="playSelected" style="width:100%;margin-top:10px">▶ 選択パートを通し再生</button><div id="segments"><div class="empty">曲を読み込むとパート1が表示されます</div></div><button id="reset" class="danger" style="width:100%;margin-top:12px">区切りをすべて削除</button>
 
@@ -238,6 +245,7 @@ $('file').onchange=e=>{
   currentSourceFile=e.target.files&&e.target.files[0]?e.target.files[0]:null;
   const f=currentSourceFile;
   if(!f)return;
+  setSongTitle(f.name);
   const ext=(f.name.split('.').pop()||'').toLowerCase();
   if(!['mp3','mp4'].includes(ext))return alert('');
   audio.pause();
@@ -298,7 +306,26 @@ function renderSegments(){let box=$('segments'),segs=getSegments();box.innerHTML
       }
       playRange=null;
       renderSegments();
-    };d.querySelector('.go').onclick=()=>{clearTimeout(loopDelayTimer);loopWaiting=false;activeIndex=i;playRange={start:x.start,end:x.end};audio.currentTime=x.start;audio.play()};let del=d.querySelector('.del');if(del)del.onclick=()=>{cuts.splice(i,1);partNames.splice(i+1,1);activeIndex=null;selected.clear();playRange=null;renderSegments()};box.appendChild(d)})}
+    };d.querySelector('.go').onclick=()=>{clearTimeout(loopDelayTimer);loopWaiting=false;activeIndex=i;playRange={start:x.start,end:x.end};audio.currentTime=x.start;audio.play()};let del=d.querySelector('.del');if(del){
+      let holdTimer=null, didDelete=false;
+      const cancelHold=()=>{clearTimeout(holdTimer);holdTimer=null;del.classList.remove('holding')};
+      const startHold=e=>{e.preventDefault();didDelete=false;cancelHold();del.classList.add('holding');holdTimer=setTimeout(()=>{didDelete=true;del.classList.remove('holding');cuts.splice(i,1);partNames.splice(i+1,1);activeIndex=null;selected.clear();playRange=null;renderSegments()},1000)};
+      del.addEventListener('pointerdown',startHold);
+      del.addEventListener('pointerup',cancelHold);
+      del.addEventListener('pointercancel',cancelHold);
+      del.addEventListener('pointerleave',cancelHold);
+      del.onclick=e=>{e.preventDefault();e.stopPropagation()};
+    }box.appendChild(d)})}
+function setSongTitle(name){
+  const el=$('songTitle'); if(!el)return;
+  el.classList.remove('scrolling');
+  el.textContent=name||'曲を選択してください';
+  requestAnimationFrame(()=>{
+    const wrap=el.parentElement;
+    if(name && el.scrollWidth>wrap.clientWidth){el.classList.add('scrolling')}
+  });
+}
+
 $('playSelected').onclick=()=>{clearTimeout(loopDelayTimer);loopWaiting=false;let segs=getSegments();if(!segs.length)return alert('先に曲を読み込んでください');if(!selected.size)return alert('再生したいパートを選択してください');let ids=[...selected].sort((a,b)=>a-b),first=ids[0],last=ids[ids.length-1];playRange={start:segs[first].start,end:segs[last].end};activeIndex=null;audio.currentTime=playRange.start;audio.play()};$('reset').onclick=()=>{if(!cuts.length)return;if(!confirm('本当に区切りをすべて削除しますか？'))return;cuts=[];partNames=[];activeIndex=null;selected.clear();playRange=null;renderSegments()};
 renderSegments();
 
