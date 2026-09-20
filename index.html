@@ -178,6 +178,31 @@ button,.primary,.cut,#reset,.deleteSaved{border:2px solid rgba(255,255,255,.92)!
   flex:0 0 auto!important;
 }
 
+
+/* iPhone: ボタン・ラベル長押し時の文字選択/コールアウトを防止 */
+button,
+.segment,
+.segment button,
+.segment label,
+.segment span,
+#playSelected,
+#reset {
+  -webkit-user-select: none !important;
+  user-select: none !important;
+  -webkit-touch-callout: none !important;
+}
+button,
+.segment button,
+#playSelected,
+#reset {
+  touch-action: manipulation;
+}
+.segment input[type="text"] {
+  -webkit-user-select: text !important;
+  user-select: text !important;
+  -webkit-touch-callout: default !important;
+}
+
 </style></head><body><main class="app"><div class="title">🪀 YoYo Part Practice</div>
 <section class="card"><div class="row" style="margin-bottom:12px"><b>曲選択</b></div><div class="row"><div class="topActions"><label class="file">新規作成<input id="file" type="file" accept="audio/mpeg,audio/mp3,video/mp4,audio/mp4,.mp3,.mp4"></label><button id="savePracticeOpen" class="primary saveTopBtn" onclick="openSaveNameModal()">保存</button><button id="openSaved" class="primary openTopBtn">📂 保存データを開く</button></div><div id="loadstatus" class="small" style="width:100%;margin-top:8px"></div></div>
 <div style="margin-top:12px">
