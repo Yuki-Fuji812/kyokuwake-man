@@ -127,7 +127,7 @@ $('saveProject').onclick=async()=>{
  const fileKey=(old&&old.fileKey)||('audio_'+Date.now()+'_'+Math.random().toString(36).slice(2));
  try{
   await dbPut(fileKey,f);
-  const p={name,fileName:f.name,fileKey,cuts:[...cuts],savedAt:Date.now()};
+  const p={name,fileName:f.name,fileKey,cuts:[...cuts],partNames:[...(window.partNames||[])],savedAt:Date.now()};
   const i=a.findIndex(x=>x.name===name); if(i>=0)a[i]=p;else a.push(p);
   saveProjects(a); alert('「'+name+'」を曲と一緒に保存しました');
  }catch(e){ alert('保存できませんでした。iPhoneの空き容量を確認してください。'); }
@@ -145,7 +145,7 @@ function drawProjects(){
    const f=p.fileKey?await dbGet(p.fileKey):null;
    if(!f){ alert('この保存データには曲本体がありません。旧データは曲を選び直してください。'); pendingProject=p; fileInput.click(); return; }
    const url=URL.createObjectURL(f); media.src=url; media.load();
-   const restore=()=>{cuts=[...p.cuts].filter(x=>x>0&&x<media.duration).sort((a,b)=>a-b);renderSegments();media.currentTime=0;media.play().catch(()=>{});};
+   const restore=()=>{cuts=[...p.cuts].filter(x=>x>0&&x<media.duration).sort((a,b)=>a-b);window.partNames=[...(p.partNames||[])];renderSegments();media.currentTime=0;media.play().catch(()=>{});};
    media.addEventListener('loadedmetadata',restore,{once:true});
   };
   const x=document.createElement('button');x.className='danger';x.style.width='auto';x.textContent='削除';
@@ -155,7 +155,65 @@ function drawProjects(){
 }
 drawProjects();
 
+
+// ===== v10: パート名称 + 全区切り削除確認 =====
+window.partNames = window.partNames || [];
+
+function decoratePartNames(){
+  // Locate rows by visible "パートN" labels, avoiding dependence on old CSS class names.
+  const all = Array.from(document.querySelectorAll('b,strong,div,span'));
+  const labels = all.filter(el => /^パート\d+$/.test((el.textContent||'').trim()) && !el.closest('.part-name-wrap'));
+  labels.forEach((label)=>{
+    const m=(label.textContent||'').trim().match(/^パート(\d+)$/);
+    if(!m)return;
+    const i=Number(m[1])-1;
+    const defaultName='パート'+(i+1);
+    label.textContent=window.partNames[i] || defaultName;
+    if(label.parentElement && !label.parentElement.querySelector('.part-name-edit')){
+      const btn=document.createElement('button');
+      btn.type='button';
+      btn.className='secondary part-name-edit';
+      btn.textContent='名称変更';
+      btn.style.cssText='width:auto;padding:6px 10px;margin-left:8px;font-size:13px';
+      btn.onclick=(e)=>{
+        e.preventDefault(); e.stopPropagation();
+        const value=prompt('パート'+(i+1)+'の名称を入力してください', window.partNames[i] || '');
+        if(value===null)return;
+        window.partNames[i]=value.trim();
+        label.textContent=window.partNames[i] || defaultName;
+      };
+      label.insertAdjacentElement('afterend',btn);
+    }
+  });
+}
+
+// Re-decorate whenever the part list changes.
+const partObserver = new MutationObserver(()=>decoratePartNames());
+const observerTarget = document.body;
+partObserver.observe(observerTarget,{childList:true,subtree:true});
+setTimeout(decoratePartNames,0);
+
+// Confirm destructive "delete all cuts" action.
+document.addEventListener('click', function(e){
+  const b=e.target.closest('button');
+  if(!b)return;
+  const txt=(b.textContent||'').replace(/\s+/g,'');
+  if(txt.includes('区切りを全て削除') || txt.includes('区切り全削除')){
+    if(b.dataset.deleteConfirmed==='yes'){
+      b.dataset.deleteConfirmed='';
+      window.partNames=[];
+      return;
+    }
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    if(confirm('本当に区切りを全て削除しますか？')){
+      b.dataset.deleteConfirmed='yes';
+      b.click();
+    }
+  }
+}, true);
+
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js?v=9').catch(()=>{}));
+  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js?v=10').catch(()=>{}));
 }
 </script></body></html>
