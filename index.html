@@ -281,6 +281,14 @@ $('file').onchange=e=>{
 audio.onloadedmetadata=()=>{audio.currentTime=0;seek.value=0;$('current').textContent='0:00.00';$('duration').textContent=fmt(audio.duration);$('loadstatus').textContent='✓ 読み込み完了（Bluetoothイヤホン接続時はiPhoneの音声出力先に従います）';renderSegments()};
 audio.onerror=()=>{$('loadstatus').textContent='このファイルを再生できません。MP3、またはH.264/AACなどiPhoneで再生可能なMP4を選択してください。';alert('ファイルを読み込めませんでした。MP3またはiPhoneで再生可能なMP4を選択してください。')};
 let loopDelayTimer=null,loopWaiting=false;
+let countdownTimers=[];
+function clearCountdown(){countdownTimers.forEach(clearTimeout);countdownTimers=[];if('speechSynthesis' in window)speechSynthesis.cancel()}
+function scheduleCountdown(delayMs){
+  clearCountdown();
+  if(delayMs<5000||!('speechSynthesis' in window))return;
+  const speak=n=>{const u=new SpeechSynthesisUtterance(String(n));u.lang='ja-JP';u.rate=1.05;u.volume=1;speechSynthesis.speak(u)};
+  [3,2,1].forEach((n,i)=>countdownTimers.push(setTimeout(()=>speak(n),Math.max(0,delayMs-(3000-i*1000)))));
+}
 audio.ontimeupdate=()=>{
   $('current').textContent=fmt(audio.currentTime);
   seek.value=audio.duration?audio.currentTime/audio.duration*1000:0;
@@ -292,6 +300,7 @@ audio.ontimeupdate=()=>{
       loopWaiting=true;
       clearTimeout(loopDelayTimer);
       const delay=Math.max(0,Math.min(60,parseFloat($('loopDelay').value)||0))*1000;
+      scheduleCountdown(delay);
       loopDelayTimer=setTimeout(()=>{
         loopWaiting=false;
         if(playRange&&$('loop').checked){
@@ -319,7 +328,7 @@ function renderSegments(){let box=$('segments'),segs=getSegments();box.innerHTML
       }
       playRange=null;
       renderSegments();
-    };d.querySelector('.go').onclick=()=>{clearTimeout(loopDelayTimer);loopWaiting=false;activeIndex=i;playRange={start:x.start,end:x.end};audio.currentTime=x.start;audio.play()};let del=d.querySelector('.del');if(del){
+    };d.querySelector('.go').onclick=()=>{clearTimeout(loopDelayTimer);clearCountdown();loopWaiting=false;activeIndex=i;playRange={start:x.start,end:x.end};audio.currentTime=x.start;audio.play()};let del=d.querySelector('.del');if(del){
       let holdTimer=null, didDelete=false;
       const cancelHold=()=>{clearTimeout(holdTimer);holdTimer=null;del.classList.remove('holding')};
       const startHold=e=>{e.preventDefault();didDelete=false;cancelHold();del.classList.add('holding');holdTimer=setTimeout(()=>{didDelete=true;del.classList.remove('holding');cuts.splice(i,1);partNames.splice(i+1,1);activeIndex=null;selected.clear();playRange=null;renderSegments()},1000)};
@@ -339,7 +348,7 @@ function setSongTitle(name){
   });
 }
 
-$('playSelected').onclick=()=>{clearTimeout(loopDelayTimer);loopWaiting=false;let segs=getSegments();if(!segs.length)return alert('先に曲を読み込んでください');if(!selected.size)return alert('再生したいパートを選択してください');let ids=[...selected].sort((a,b)=>a-b),first=ids[0],last=ids[ids.length-1];playRange={start:segs[first].start,end:segs[last].end};activeIndex=null;audio.currentTime=playRange.start;audio.play()};$('reset').onclick=()=>{if(!cuts.length)return;if(!confirm('本当に区切りをすべて削除しますか？'))return;cuts=[];partNames=[];activeIndex=null;selected.clear();playRange=null;renderSegments()};
+$('playSelected').onclick=()=>{clearTimeout(loopDelayTimer);clearCountdown();loopWaiting=false;let segs=getSegments();if(!segs.length)return alert('先に曲を読み込んでください');if(!selected.size)return alert('再生したいパートを選択してください');let ids=[...selected].sort((a,b)=>a-b),first=ids[0],last=ids[ids.length-1];playRange={start:segs[first].start,end:segs[last].end};activeIndex=null;audio.currentTime=playRange.start;audio.play()};$('reset').onclick=()=>{if(!cuts.length)return;if(!confirm('本当に区切りをすべて削除しますか？'))return;cuts=[];partNames=[];activeIndex=null;selected.clear();playRange=null;renderSegments()};
 renderSegments();
 
 if ('serviceWorker' in navigator) {
