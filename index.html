@@ -127,4 +127,52 @@ $('savedPanel').onclick=e=>{if(e.target===$('savedPanel'))$('savedPanel').style.
 })();
 
 renderSegments();renderSaved();
+
+// Bluetoothイヤホン / ヘッドセット操作
+function headsetTogglePlay(){
+  if(!audio.src) return;
+  if(audio.paused){
+    if(playRange && audio.currentTime >= playRange.end) audio.currentTime = playRange.start;
+    audio.play().catch(()=>{});
+  }else{
+    audio.pause();
+  }
+}
+function setupHeadsetControls(){
+  if(!('mediaSession' in navigator)) return;
+  try{
+    navigator.mediaSession.setActionHandler('play', ()=>{ if(audio.src) audio.play().catch(()=>{}); });
+    navigator.mediaSession.setActionHandler('pause', ()=>{ audio.pause(); });
+    navigator.mediaSession.setActionHandler('stop', ()=>{ audio.pause(); });
+    navigator.mediaSession.setActionHandler('seekbackward', ()=>{
+      if(playRange){
+        const parts=getParts(), idx=parts.findIndex(p=>audio.currentTime>=p.s-.05&&audio.currentTime<=p.e+.05);
+        if(idx>=0){
+          if(audio.currentTime-parts[idx].s<=2 && idx>0) audio.currentTime=parts[idx-1].s;
+          else audio.currentTime=parts[idx].s;
+        } else audio.currentTime=Math.max(0,audio.currentTime-5);
+      } else audio.currentTime=Math.max(0,audio.currentTime-5);
+    });
+    navigator.mediaSession.setActionHandler('seekforward', ()=>{
+      const parts=getParts(), idx=parts.findIndex(p=>audio.currentTime>=p.s-.05&&audio.currentTime<=p.e+.05);
+      if(idx>=0 && idx<parts.length-1) audio.currentTime=parts[idx+1].s;
+      else audio.currentTime=Math.min(audio.duration||audio.currentTime,audio.currentTime+5);
+    });
+    navigator.mediaSession.setActionHandler('previoustrack', ()=>{
+      const parts=getParts(), idx=parts.findIndex(p=>audio.currentTime>=p.s-.05&&audio.currentTime<=p.e+.05);
+      if(idx>=0){
+        if(audio.currentTime-parts[idx].s<=2 && idx>0) audio.currentTime=parts[idx-1].s;
+        else audio.currentTime=parts[idx].s;
+      }
+    });
+    navigator.mediaSession.setActionHandler('nexttrack', ()=>{
+      const parts=getParts(), idx=parts.findIndex(p=>audio.currentTime>=p.s-.05&&audio.currentTime<=p.e+.05);
+      if(idx>=0 && idx<parts.length-1) audio.currentTime=parts[idx+1].s;
+    });
+  }catch(e){}
+}
+setupHeadsetControls();
+audio.addEventListener('play',()=>{try{navigator.mediaSession.playbackState='playing'}catch(e){}});
+audio.addEventListener('pause',()=>{try{navigator.mediaSession.playbackState='paused'}catch(e){}});
+
 </script></body></html>
