@@ -10,7 +10,7 @@ button,.file{border:1px solid rgba(255,255,255,.09);border-radius:13px;backgroun
 </style></head><body><main class="app">
 <div class="title">YoYo Part Practice</div>
 <section class="card"><div class="row" style="margin-bottom:12px"><b>曲選択パート</b></div>
-<div class="topActions"><label class="file" id="newFileLabel">新規作成<input id="file" type="file" accept="audio/mpeg,audio/mp3,video/mp4,audio/mp4,.mp3,.mp4"></label><button id="savePracticeOpen">保存</button><button id="openSaved">保存データを開く</button></div><div id="loadstatus" class="small" style="margin-top:8px"></div></section>
+<div class="topActions"><button id="newFileBtn" type="button">新規作成</button><input id="file" type="file" accept="audio/mpeg,audio/mp3,video/mp4,audio/mp4,.mp3,.mp4" style="display:none"><button id="savePracticeOpen">保存</button><button id="openSaved">保存データを開く</button></div><div id="loadstatus" class="small" style="margin-top:8px"></div></section>
 <section class="card"><div class="row" style="margin-bottom:10px"><b>分割パート</b></div><div class="row"><div id="current" class="time">0:00.00</div><div class="grow"></div><div id="duration" class="small">0:00.00</div></div><input id="seek" class="bar" type="range" min="0" max="1000" value="0"><div class="splitActions"><button id="play">再生</button><button id="cut">分割</button></div></section>
 <section class="card"><div class="row"><b>練習パート</b><div class="grow"></div><label class="small"><input id="loop" type="checkbox" checked> 選択範囲をループ</label><label class="small loopDelayLabel">無音 <input id="loopDelay" type="number" min="0" max="60" step="1" value="0"> 秒</label></div><div class="small" style="margin-top:8px">複数パートを選択すると、最初の選択パートから最後の選択パートまで通しで再生します。</div><button id="playSelected" style="width:100%;margin-top:10px">選択パートを通し再生</button><div id="segments"><div class="empty">曲を読み込むとパート1が表示されます</div></div><button id="reset" class="danger" style="width:100%;margin-top:12px">区切りをすべて削除</button></section>
 <div id="saveNameModal" class="savedModal" style="display:none"><div class="savedModalBox"><div class="savedModalHead"><b>保存名称</b><button id="closeSaveName" class="closeSaved">×</button></div><input id="saveName" class="saveName" placeholder="保存名（例：練習曲1）"><button id="savePractice" style="margin-top:12px">保存</button></div></div>
@@ -32,7 +32,7 @@ function loadFile(f){
 }
 $('file').addEventListener('change',e=>{const f=e.target.files?.[0];if(f)loadFile(f)});
 // Important: clear the picker BEFORE every new selection, so a second song and even the same file can be opened after saving.
-$('newFileLabel').addEventListener('click',()=>{$('file').value='';});
+$('newFileBtn').addEventListener('click',()=>{const f=$('file');f.value='';f.click();});
 
 audio.onloadedmetadata=()=>{$('duration').textContent=fmt(audio.duration);$('loadstatus').textContent='読み込み完了';renderSegments()};
 audio.onerror=()=>{$('loadstatus').textContent='このファイルを再生できません。MP3またはiPhoneで再生可能なMP4を選択してください。'};
@@ -79,5 +79,20 @@ $('openSaved').onclick=()=>{$('savedPanel').style.display='flex';renderSaved()};
 $('closeSaved').onclick=()=>$('savedPanel').style.display='none';
 $('saveNameModal').onclick=e=>{if(e.target===$('saveNameModal'))$('saveNameModal').style.display='none'};
 $('savedPanel').onclick=e=>{if(e.target===$('savedPanel'))$('savedPanel').style.display='none'};
+
+// Remove old PWA caches/service workers so stale index.html is not shown after replacement.
+(async()=>{
+  try{
+    if('serviceWorker' in navigator){
+      const regs=await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map(r=>r.unregister()));
+    }
+    if('caches' in window){
+      const keys=await caches.keys();
+      await Promise.all(keys.map(k=>caches.delete(k)));
+    }
+  }catch(e){}
+})();
+
 renderSegments();renderSaved();
 </script></body></html>
