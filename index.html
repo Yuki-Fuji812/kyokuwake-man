@@ -24,6 +24,13 @@ const fmt=t=>{if(!isFinite(t))return'0:00.00';let m=Math.floor(t/60),s=t-m*60;re
 function loadFile(f){
  if(!f)return;
  audio.pause(); clearTimeout(loopTimer); loopWaiting=false;
+ playRange=null;
+ // 新しい曲を開く前に、前の曲の再生状態とカーソルを完全に初期化
+ try{audio.currentTime=0}catch(e){}
+ seek.value=0;
+ $('current').textContent='0:00.00';
+ $('duration').textContent='0:00.00';
+ $('play').textContent='再生';
  if(objectUrl)URL.revokeObjectURL(objectUrl);
  currentSourceFile=f; objectUrl=URL.createObjectURL(f);
  audio.removeAttribute('src'); audio.src=objectUrl; audio.load();
@@ -34,7 +41,7 @@ $('file').addEventListener('change',e=>{const f=e.target.files?.[0];if(f)loadFil
 // Important: clear the picker BEFORE every new selection, so a second song and even the same file can be opened after saving.
 $('newFileBtn').addEventListener('click',()=>{const f=$('file');f.value='';f.click();});
 
-audio.onloadedmetadata=()=>{$('duration').textContent=fmt(audio.duration);$('loadstatus').textContent='読み込み完了';renderSegments()};
+audio.onloadedmetadata=()=>{audio.currentTime=0;seek.value=0;$('current').textContent='0:00.00';$('play').textContent='再生';$('duration').textContent=fmt(audio.duration);$('loadstatus').textContent='読み込み完了';renderSegments()};
 audio.onerror=()=>{$('loadstatus').textContent='このファイルを再生できません。MP3またはiPhoneで再生可能なMP4を選択してください。'};
 audio.ontimeupdate=()=>{
  $('current').textContent=fmt(audio.currentTime); seek.value=audio.duration?audio.currentTime/audio.duration*1000:0;
