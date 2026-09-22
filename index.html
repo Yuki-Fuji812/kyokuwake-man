@@ -239,6 +239,27 @@ button,
 #filename.marquee{padding-left:100%;animation:fileScroll 12s linear infinite}
 @keyframes fileScroll{0%{transform:translateX(0)}100%{transform:translateX(-100%)}}
 </style>
+
+<style id="practice-mode-style">
+.practiceModeSwitch{
+ position:relative;display:grid;grid-template-columns:1fr 1fr;width:100%;
+ margin:12px 0 10px;padding:3px;border:1px solid rgba(255,255,255,.35);
+ border-radius:999px;background:rgba(4,8,18,.55);overflow:hidden;
+}
+.practiceModeSwitch .modeTab{
+ position:relative;z-index:2;border:0!important;background:transparent!important;
+ box-shadow:none!important;padding:8px 10px!important;min-height:38px;
+ font-size:14px!important;color:rgba(255,255,255,.62)!important;
+}
+.practiceModeSwitch .modeTab.active{color:#fff!important}
+.practiceModeSwitch .modeCursor{
+ position:absolute;z-index:1;left:3px;top:3px;bottom:3px;width:calc(50% - 3px);
+ border-radius:999px;background:linear-gradient(135deg,var(--accent1),var(--accent2));
+ box-shadow:0 2px 12px rgba(57,120,255,.35);transition:transform .18s ease;
+}
+.practiceModeSwitch.split .modeCursor{transform:translateX(100%)}
+.splitActions .modeHidden{display:none!important}
+</style>
 </head><body><main class="app"><div class="title appLogo" aria-label="Split The Music"><span class="l1">Split</span><span class="l2">The</span><span class="l3">Music</span></div>
 <section class="card"><div class="row" style="margin-bottom:12px"><b>曲選択</b></div><div class="row"><div class="topActions"><label class="file">新規作成<input id="file" type="file" accept="audio/mpeg,audio/mp3,video/mp4,audio/mp4,.mp3,.mp4"></label><button id="savePracticeOpen" class="primary saveTopBtn" onclick="openSaveNameModal()">保存</button><button id="openSaved" class="primary openTopBtn">📂 保存データを開く</button></div><div id="loadstatus" class="small" style="width:100%;margin-top:8px"></div></div>
 <div style="margin-top:12px">
@@ -261,7 +282,18 @@ button,
 
 
 </section>
-<section class="card"><div class="row" style="margin-bottom:10px"><div class="songNameWrap"><span id="filename">曲を選択してください</span></div></div><div class="row"><div id="current" class="time">0:00.00</div><div class="grow"></div><div id="duration" class="small">0:00.00</div></div><input id="seek" class="bar" type="range" min="0" max="1000" value="0"><div class="controls"><div class="splitActions"><button id="play" class="play">▶ 再生</button><button id="cut" class="cut">✂️ 分割</button></div></div></section>
+<section class="card"><div class="row" style="margin-bottom:10px"><div class="songNameWrap"><span id="filename">曲を選択してください</span></div></div><div class="row"><div id="current" class="time">0:00.00</div><div class="grow"></div><div id="duration" class="small">0:00.00</div></div><input id="seek" class="bar" type="range" min="0" max="1000" value="0"><div class="controls">
+  <div class="practiceModeSwitch" role="group" aria-label="操作モード">
+    <button id="modePlay" class="modeTab active" type="button">再生モード</button>
+    <button id="modeSplit" class="modeTab" type="button">分割モード</button>
+    <span class="modeCursor" aria-hidden="true"></span>
+  </div>
+  <div class="splitActions">
+    <button id="rewindStart" class="play">⏮ 最初から</button>
+    <button id="play" class="play">▶ 再生</button>
+    <button id="cut" class="cut modeHidden">✂️ 分割</button>
+  </div>
+</div></section>
 
 <section class="card"><div class="row"><b>再生</b><div class="grow"></div><label class="small"><input id="loop" type="checkbox" checked> 選択範囲をループ</label><label class="small loopDelayLabel">インターバル <input id="loopDelay" type="number" min="0" max="60" step="1" value="0"> 秒</label></div><div class="small" style="margin-top:8px">複数パートを選択すると、最初の選択パートから最後の選択パートまで通しで再生します。</div><button id="playSelected" style="width:100%;margin-top:10px">▶ 選択パートを再生</button><div id="segments"><div class="empty">曲を読み込むとパート1が表示されます</div></div><button id="reset" class="danger" style="width:100%;margin-top:12px">区切りをすべて削除</button>
 
@@ -379,6 +411,35 @@ audio.ontimeupdate=()=>{
   }
 };
 seek.oninput=()=>{if(audio.duration)audio.currentTime=seek.value/1000*audio.duration};
+let practiceMode='play';
+function setPracticeMode(mode){
+ practiceMode=mode==='split'?'split':'play';
+ const sw=document.querySelector('.practiceModeSwitch');
+ const mp=$('modePlay'),ms=$('modeSplit'),rw=$('rewindStart'),cut=$('cut');
+ if(sw)sw.classList.toggle('split',practiceMode==='split');
+ if(mp)mp.classList.toggle('active',practiceMode==='play');
+ if(ms)ms.classList.toggle('active',practiceMode==='split');
+ if(rw)rw.classList.toggle('modeHidden',practiceMode!=='play');
+ if(cut)cut.classList.toggle('modeHidden',practiceMode!=='split');
+}
+$('modePlay').onclick=()=>setPracticeMode('play');
+$('modeSplit').onclick=()=>setPracticeMode('split');
+$('rewindStart').onclick=()=>{
+ if(!audio.src)return alert('先に曲を読み込んでください');
+ clearTimeout(loopDelayTimer);clearCountdown();loopWaiting=false;
+ const segs=getSegments();
+ let start=0;
+ if(selected.size&&segs.length){
+   const first=Math.min(...selected);
+   if(segs[first])start=segs[first].start;
+ }
+ const wasPlaying=!audio.paused;
+ audio.currentTime=start;
+ seek.value=audio.duration?start/audio.duration*1000:0;
+ $('current').textContent=fmt(start);
+ if(!wasPlaying)audio.pause();
+};
+setPracticeMode('play');
 $('play').onclick=()=>{
  if(!audio.src)return alert('先に曲を読み込んでください');
  unlockCountdownBeep();clearTimeout(loopDelayTimer);clearCountdown();loopWaiting=false;
