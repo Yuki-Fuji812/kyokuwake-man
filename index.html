@@ -374,20 +374,26 @@ audio.ontimeupdate=()=>{
       audio.pause();
       audio.currentTime=playRange.end;
       playRange=null;
+      setSelectedPlaybackLock(false);
     }
   }
 };
 seek.oninput=()=>{if(audio.duration)audio.currentTime=seek.value/1000*audio.duration};
-$('play').onclick=()=>{if(!audio.src)return alert('先に曲を読み込んでください');unlockCountdownBeep();clearTimeout(loopDelayTimer);clearCountdown();loopWaiting=false;if(audio.paused){audio.play()}else{audio.pause();setSelectedPlaybackLock(false)}};audio.onplay=()=>$('play').textContent='⏸ 一時停止';audio.onpause=()=>$('play').textContent='▶ 再生';
-$('cut').onclick=()=>{if(selectedPlaybackLocked)return;if(!audio.src||!isFinite(audio.duration))return alert('先に曲を読み込んでください');let t=audio.currentTime;if(t<.15||t>audio.duration-.15)return alert('曲の開始・終了付近では区切れません');if(cuts.some(x=>Math.abs(x-t)<.15))return alert('ほぼ同じ位置に区切りがあります');cuts.push(t);cuts.sort((a,b)=>a-b);activeIndex=null;selected.clear();playRange=null;renderSegments()};
+$('play').onclick=()=>{
+ if(!audio.src)return alert('先に曲を読み込んでください');
+ unlockCountdownBeep();clearTimeout(loopDelayTimer);clearCountdown();loopWaiting=false;
+ if(audio.paused){audio.play()}else{audio.pause();if(selectedPlaybackLocked){playRange=null;setSelectedPlaybackLock(false)}}
+};audio.onplay=()=>$('play').textContent='⏸ 一時停止';audio.onpause=()=>$('play').textContent='▶ 再生';
+$('cut').onclick=()=>{if(!audio.src||!isFinite(audio.duration))return alert('先に曲を読み込んでください');let t=audio.currentTime;if(t<.15||t>audio.duration-.15)return alert('曲の開始・終了付近では区切れません');if(cuts.some(x=>Math.abs(x-t)<.15))return alert('ほぼ同じ位置に区切りがあります');cuts.push(t);cuts.sort((a,b)=>a-b);activeIndex=null;selected.clear();playRange=null;renderSegments()};
 function getSegments(){if(!isFinite(audio.duration))return[];let pts=[0,...cuts,audio.duration];return pts.slice(0,-1).map((s,i)=>({start:s,end:pts[i+1],name:partNames[i]||('パート'+(i+1))}))}
 function setSelectedPlaybackLock(locked){
  selectedPlaybackLocked=!!locked;
- if($('loopDelay'))$('loopDelay').disabled=selectedPlaybackLocked;
  if($('cut'))$('cut').disabled=selectedPlaybackLocked;
- document.querySelectorAll('#segments input[type="checkbox"],#segments .del').forEach(el=>el.disabled=selectedPlaybackLocked);
+ if($('loopDelay'))$('loopDelay').disabled=selectedPlaybackLocked;
+ document.querySelectorAll('#segments .selectbox,#segments .del').forEach(el=>el.disabled=selectedPlaybackLocked);
 }
-function renderSegments(){let box=$('segments'),segs=getSegments();box.innerHTML='';if(!segs.length){box.innerHTML='<div class="empty">曲を読み込むとパート1が表示されます</div>';return}segs.forEach((x,i)=>{let d=document.createElement('div');d.className='segment'+(selected.has(i)?' selected':'');d.innerHTML=`<input class="selectbox" type="checkbox" ${selected.has(i)?'checked':''}><div class="grow"><input class="partName" value="${x.name}" aria-label="パート${i+1}の名称"><div class="segtimes">${fmt(x.start)} → ${fmt(x.end)}</div></div>${i<segs.length-1?'<button class="del">削除</button>':''}`;let name=d.querySelector('.partName');name.onchange=()=>{partNames[i]=name.value.trim()||('パート'+(i+1));name.value=partNames[i]};let cb=d.querySelector('.selectbox');cb.onchange=()=>{if(selectedPlaybackLocked){cb.checked=selected.has(i);return;}
+function renderSegments(){let box=$('segments'),segs=getSegments();box.innerHTML='';if(!segs.length){box.innerHTML='<div class="empty">曲を読み込むとパート1が表示されます</div>';return}segs.forEach((x,i)=>{let d=document.createElement('div');d.className='segment'+(selected.has(i)?' selected':'');d.innerHTML=`<input class="selectbox" type="checkbox" ${selected.has(i)?'checked':''}><div class="grow"><input class="partName" value="${x.name}" aria-label="パート${i+1}の名称"><div class="segtimes">${fmt(x.start)} → ${fmt(x.end)}</div></div>${i<segs.length-1?'<button class="del">削除</button>':''}`;let name=d.querySelector('.partName');name.onchange=()=>{partNames[i]=name.value.trim()||('パート'+(i+1));name.value=partNames[i]};let cb=d.querySelector('.selectbox');cb.onchange=()=>{
+      if(selectedPlaybackLocked){cb.checked=selected.has(i);return;}
       if(cb.checked) selected.add(i); else selected.delete(i);
       if(selected.size>=2){
         const nums=[...selected].sort((a,b)=>a-b);
@@ -396,7 +402,7 @@ function renderSegments(){let box=$('segments'),segs=getSegments();box.innerHTML
       }
       playRange=null;
       renderSegments();
-    };d.querySelector('.go').onclick=()=>{unlockCountdownBeep();clearTimeout(loopDelayTimer);clearCountdown();loopWaiting=false;activeIndex=i;playRange={start:x.start,end:x.end};audio.currentTime=x.start;audio.play()};let del=d.querySelector('.del');if(del){
+    };let del=d.querySelector('.del');if(del){
  let holdTimer=null;
  const cancel=()=>{if(holdTimer){clearTimeout(holdTimer);holdTimer=null}};
  const begin=ev=>{ev.preventDefault();if(selectedPlaybackLocked)return;cancel();holdTimer=setTimeout(()=>{holdTimer=null;cuts.splice(i,1);partNames.splice(i+1,1);activeIndex=null;selected.clear();playRange=null;renderSegments()},1000)};
@@ -475,11 +481,19 @@ function renderSavedPractices(){
       const f=stored instanceof File ? stored : new File([stored],p.fileName||'practice-media',{type:p.fileType||stored.type||''});
       if(objectUrl)URL.revokeObjectURL(objectUrl);
       objectUrl=URL.createObjectURL(f); currentSourceFile=f;
+      audio.pause();
+      clearTimeout(loopDelayTimer);clearCountdown();loopWaiting=false;setSelectedPlaybackLock(false);
       audio.src=objectUrl;
-      audio.load();
       cuts=[...(p.cuts||[])]; partNames=[...(p.partNames||[])];
       activeIndex=null; selected.clear(); playRange=null;
-      audio.onloadedmetadata=()=>{renderSegments();audio.currentTime=0;updateUI&&updateUI()};
+      const onSavedLoaded=()=>{
+        audio.removeEventListener('loadedmetadata',onSavedLoaded);
+        renderSegments();audio.pause();audio.currentTime=0;seek.value=0;
+        $('current').textContent='0:00.00';$('play').textContent='▶ 再生';
+        if(typeof updateUI==='function')updateUI();
+      };
+      audio.addEventListener('loadedmetadata',onSavedLoaded);
+      audio.load();
       document.getElementById('savedPanel').style.display='none';
     };
     const del=document.createElement('button'); del.className='deleteSaved'; del.textContent='削除';
