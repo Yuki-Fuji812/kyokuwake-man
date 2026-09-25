@@ -316,8 +316,7 @@ body:not(.splitMode) #reset{display:none!important}
   </div>
 </div></section>
 
-<section class="card"><div class="row"><b>再生</b><div class="grow"></div><label class="small"><input id="loop" type="checkbox" checked> 選択範囲をループ</label><label class="small loopDelayLabel">インターバル <input id="loopDelay" type="number" min="0" max="60" step="1" value="0"> 秒</label></div><div class="small" style="margin-top:8px">複数パートを選択すると、最初の選択パートから最後の選択パートまで通しで再生します。</div><div id="segments"><div class="empty">曲を読み込むとパート1が表示されます</div></div><div id="resetSlot"></div>
-<template id="resetTemplate"><button id="reset" class="danger" style="width:100%;margin-top:12px">区切りをすべて削除</button></template>
+<section class="card"><div class="row"><b>再生</b><div class="grow"></div><label class="small"><input id="loop" type="checkbox" checked> 選択範囲をループ</label><label class="small loopDelayLabel">インターバル <input id="loopDelay" type="number" min="0" max="60" step="1" value="0"> 秒</label></div><div class="small" style="margin-top:8px">複数パートを選択すると、最初の選択パートから最後の選択パートまで通しで再生します。</div><div id="segments"><div class="empty">曲を読み込むとパート1が表示されます</div></div><button id="reset" class="danger" style="width:100%;margin-top:12px">区切りをすべて削除</button>
 
 </section>
 <video id="audio" playsinline preload="metadata" style="display:none"></video></main><script>
@@ -454,9 +453,9 @@ function setPracticeMode(mode){
  if(rw)rw.classList.toggle('modeHidden',practiceMode!=='play');
  if(cut)cut.classList.toggle('modeHidden',practiceMode!=='split');
  document.body.classList.toggle('splitMode',practiceMode==='split');
+ if($('reset'))$('reset').style.display=practiceMode==='split'?'':'none';
  if(changed && audio.paused && audio.src)rewindAbsoluteStart();
  renderSegments();
- renderResetForMode();
 }
 $('modePlay').onclick=()=>{if(!audio.paused)return;setPracticeMode('play')};setPracticeMode('play')};
 $('modeSplit').onclick=()=>{if(!audio.paused||selectedPlaybackLocked)return;setPracticeMode('split')};setPracticeMode('split')};
@@ -527,22 +526,8 @@ function startCheckedPartsPlayback(){
  playRange={start:segs[first].start,end:segs[last].end};activeIndex=null;
  setSelectedPlaybackLock(true);audio.currentTime=playRange.start;audio.play();return true;
 }
-function bindResetButton(){
- const reset=$('reset');
- if(!reset)return;
- reset.onclick=()=>{if(!cuts.length)return;if(!confirm('本当に区切りをすべて削除しますか？'))return;cuts=[];partNames=[];activeIndex=null;selected.clear();playRange=null;renderSegments()};
-}
-function renderResetForMode(){
- const slot=$('resetSlot');
- if(!slot)return;
- slot.innerHTML='';
- if(practiceMode==='split'){
-   slot.appendChild($('resetTemplate').content.cloneNode(true));
-   bindResetButton();
- }
-}
+$('reset').onclick=()=>{if(!cuts.length)return;if(!confirm('本当に区切りをすべて削除しますか？'))return;cuts=[];partNames=[];activeIndex=null;selected.clear();playRange=null;renderSegments()};
 renderSegments();
-renderResetForMode();
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js?v=9').catch(()=>{}));
