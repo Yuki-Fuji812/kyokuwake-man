@@ -277,7 +277,7 @@ button,
  cursor:default!important;
 }
 </style>
-<style id="mode-visibility-fix">
+<style id="mode-delete-visibility-safe">
 body:not(.splitMode) #segments .del,
 body:not(.splitMode) #reset{display:none!important}
 </style>
@@ -433,18 +433,8 @@ audio.ontimeupdate=()=>{
 };
 seek.oninput=()=>{if(audio.duration)audio.currentTime=seek.value/1000*audio.duration};
 let practiceMode='play';
-function rewindAbsoluteStart(){
- clearTimeout(loopDelayTimer);clearCountdown();loopWaiting=false;
- playRange=null;activeIndex=null;setSelectedPlaybackLock(false);
- audio.pause();
- try{audio.currentTime=0}catch(_){}
- seek.value=0;$('current').textContent='0:00.00';
-}
 function setPracticeMode(mode){
- const next=mode==='split'?'split':'play';
- if(!audio.paused && next!==practiceMode)return;
- const changed=next!==practiceMode;
- practiceMode=next;
+ practiceMode=mode==='split'?'split':'play';
  const sw=document.querySelector('.practiceModeSwitch');
  const mp=$('modePlay'),ms=$('modeSplit'),rw=$('rewindStart'),cut=$('cut');
  if(sw)sw.classList.toggle('split',practiceMode==='split');
@@ -453,9 +443,6 @@ function setPracticeMode(mode){
  if(rw)rw.classList.toggle('modeHidden',practiceMode!=='play');
  if(cut)cut.classList.toggle('modeHidden',practiceMode!=='split');
  document.body.classList.toggle('splitMode',practiceMode==='split');
- if($('reset'))$('reset').style.display=practiceMode==='split'?'':'none';
- if(changed && audio.paused && audio.src)rewindAbsoluteStart();
- renderSegments();
 }
 $('modePlay').onclick=()=>{if(!audio.paused)return;setPracticeMode('play')};
 $('modeSplit').onclick=()=>{if(!audio.paused||selectedPlaybackLocked)return;setPracticeMode('split')};
@@ -463,12 +450,8 @@ $('rewindStart').onclick=()=>{
  if(!audio.src)return alert('先に曲を読み込んでください');
  clearTimeout(loopDelayTimer);clearCountdown();loopWaiting=false;
  audio.pause();playRange=null;activeIndex=null;setSelectedPlaybackLock(false);
- const segs=getSegments();
- let start=0;
- if(selected.size&&segs.length){
-   const first=Math.min(...selected);
-   if(segs[first])start=segs[first].start;
- }
+ const segs=getSegments();let start=0;
+ if(selected.size&&segs.length){const first=Math.min(...selected);if(segs[first])start=segs[first].start;}
  try{audio.currentTime=start}catch(_){}
  seek.value=audio.duration?start/audio.duration*1000:0;
  $('current').textContent=fmt(start);
@@ -497,7 +480,7 @@ function setSelectedPlaybackLock(locked){
  const modeSwitch=document.querySelector('.practiceModeSwitch');
  if(modeSwitch)modeSwitch.classList.toggle('playLocked',selectedPlaybackLocked);
 }
-function renderSegments(){let box=$('segments'),segs=getSegments();box.innerHTML='';if(!segs.length){box.innerHTML='<div class="empty">曲を読み込むとパート1が表示されます</div>';return}segs.forEach((x,i)=>{let d=document.createElement('div');d.className='segment'+(selected.has(i)?' selected':'');d.innerHTML=`<input class="selectbox" type="checkbox" ${selected.has(i)?'checked':''}><div class="grow"><input class="partName" value="${x.name}" aria-label="パート${i+1}の名称"><div class="segtimes">${fmt(x.start)} → ${fmt(x.end)}</div></div>${practiceMode==='split'&&i<segs.length-1?'<button class="del">削除</button>':''}`;let name=d.querySelector('.partName');name.onchange=()=>{partNames[i]=name.value.trim()||('パート'+(i+1));name.value=partNames[i]};let cb=d.querySelector('.selectbox');cb.onchange=()=>{
+function renderSegments(){let box=$('segments'),segs=getSegments();box.innerHTML='';if(!segs.length){box.innerHTML='<div class="empty">曲を読み込むとパート1が表示されます</div>';return}segs.forEach((x,i)=>{let d=document.createElement('div');d.className='segment'+(selected.has(i)?' selected':'');d.innerHTML=`<input class="selectbox" type="checkbox" ${selected.has(i)?'checked':''}><div class="grow"><input class="partName" value="${x.name}" aria-label="パート${i+1}の名称"><div class="segtimes">${fmt(x.start)} → ${fmt(x.end)}</div></div>${i<segs.length-1?'<button class="del">削除</button>':''}`;let name=d.querySelector('.partName');name.onchange=()=>{partNames[i]=name.value.trim()||('パート'+(i+1));name.value=partNames[i]};let cb=d.querySelector('.selectbox');cb.onchange=()=>{
       if(selectedPlaybackLocked){cb.checked=selected.has(i);return;}
       if(cb.checked) selected.add(i); else selected.delete(i);
       if(selected.size>=2){
