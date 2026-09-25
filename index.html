@@ -277,6 +277,10 @@ button,
  cursor:default!important;
 }
 </style>
+<style id="mode-visibility-fix">
+body:not(.splitMode) #segments .del,
+body:not(.splitMode) #reset{display:none!important}
+</style>
 </head><body><main class="app"><div class="title appLogo" aria-label="Split The Music"><span class="l1">Split</span><span class="l2">The</span><span class="l3">Music</span></div>
 <section class="card"><div class="row" style="margin-bottom:12px"><b>曲選択</b></div><div class="row"><div class="topActions"><label class="file">新規作成<input id="file" type="file" accept="audio/mpeg,audio/mp3,video/mp4,audio/mp4,.mp3,.mp4"></label><button id="savePracticeOpen" class="primary saveTopBtn" onclick="openSaveNameModal()">保存</button><button id="openSaved" class="primary openTopBtn">📂 保存データを開く</button></div><div id="loadstatus" class="small" style="width:100%;margin-top:8px"></div></div>
 <div style="margin-top:12px">
@@ -429,8 +433,18 @@ audio.ontimeupdate=()=>{
 };
 seek.oninput=()=>{if(audio.duration)audio.currentTime=seek.value/1000*audio.duration};
 let practiceMode='play';
+function rewindAbsoluteStart(){
+ clearTimeout(loopDelayTimer);clearCountdown();loopWaiting=false;
+ playRange=null;activeIndex=null;setSelectedPlaybackLock(false);
+ audio.pause();
+ try{audio.currentTime=0}catch(_){}
+ seek.value=0;$('current').textContent='0:00.00';
+}
 function setPracticeMode(mode){
- practiceMode=mode==='split'?'split':'play';
+ const next=mode==='split'?'split':'play';
+ if(!audio.paused && next!==practiceMode)return;
+ const changed=next!==practiceMode;
+ practiceMode=next;
  const sw=document.querySelector('.practiceModeSwitch');
  const mp=$('modePlay'),ms=$('modeSplit'),rw=$('rewindStart'),cut=$('cut');
  if(sw)sw.classList.toggle('split',practiceMode==='split');
@@ -438,23 +452,15 @@ function setPracticeMode(mode){
  if(ms)ms.classList.toggle('active',practiceMode==='split');
  if(rw)rw.classList.toggle('modeHidden',practiceMode!=='play');
  if(cut)cut.classList.toggle('modeHidden',practiceMode!=='split');
+ document.body.classList.toggle('splitMode',practiceMode==='split');
+ if(changed && audio.paused && audio.src)rewindAbsoluteStart();
+ renderSegments();
 }
-$('modePlay').onclick=()=>setPracticeMode('play');
-$('modeSplit').onclick=()=>{if(selectedPlaybackLocked)return;setPracticeMode('split')};
+$('modePlay').onclick=()=>{if(!audio.paused)return;setPracticeMode('play')};
+$('modeSplit').onclick=()=>{if(!audio.paused||selectedPlaybackLocked)return;setPracticeMode('split')};setPracticeMode('split')};
 $('rewindStart').onclick=()=>{
  if(!audio.src)return alert('先に曲を読み込んでください');
- clearTimeout(loopDelayTimer);clearCountdown();loopWaiting=false;
- const segs=getSegments();
- let start=0;
- if(selected.size&&segs.length){
-   const first=Math.min(...selected);
-   if(segs[first])start=segs[first].start;
- }
- const wasPlaying=!audio.paused;
- audio.currentTime=start;
- seek.value=audio.duration?start/audio.duration*1000:0;
- $('current').textContent=fmt(start);
- if(!wasPlaying)audio.pause();
+ rewindAbsoluteStart();
 };
 setPracticeMode('play');
 $('play').onclick=()=>{
