@@ -316,7 +316,8 @@ body:not(.splitMode) #reset{display:none!important}
   </div>
 </div></section>
 
-<section class="card"><div class="row"><b>再生</b><div class="grow"></div><label class="small"><input id="loop" type="checkbox" checked> 選択範囲をループ</label><label class="small loopDelayLabel">インターバル <input id="loopDelay" type="number" min="0" max="60" step="1" value="0"> 秒</label></div><div class="small" style="margin-top:8px">複数パートを選択すると、最初の選択パートから最後の選択パートまで通しで再生します。</div><div id="segments"><div class="empty">曲を読み込むとパート1が表示されます</div></div><button id="reset" class="danger" style="width:100%;margin-top:12px">区切りをすべて削除</button>
+<section class="card"><div class="row"><b>再生</b><div class="grow"></div><label class="small"><input id="loop" type="checkbox" checked> 選択範囲をループ</label><label class="small loopDelayLabel">インターバル <input id="loopDelay" type="number" min="0" max="60" step="1" value="0"> 秒</label></div><div class="small" style="margin-top:8px">複数パートを選択すると、最初の選択パートから最後の選択パートまで通しで再生します。</div><div id="segments"><div class="empty">曲を読み込むとパート1が表示されます</div></div><div id="resetSlot"></div>
+<template id="resetTemplate"><button id="reset" class="danger" style="width:100%;margin-top:12px">区切りをすべて削除</button></template>
 
 </section>
 <video id="audio" playsinline preload="metadata" style="display:none"></video></main><script>
@@ -455,12 +456,23 @@ function setPracticeMode(mode){
  document.body.classList.toggle('splitMode',practiceMode==='split');
  if(changed && audio.paused && audio.src)rewindAbsoluteStart();
  renderSegments();
+ renderResetForMode();
 }
-$('modePlay').onclick=()=>{if(!audio.paused)return;setPracticeMode('play')};
+$('modePlay').onclick=()=>{if(!audio.paused)return;setPracticeMode('play')};setPracticeMode('play')};
 $('modeSplit').onclick=()=>{if(!audio.paused||selectedPlaybackLocked)return;setPracticeMode('split')};setPracticeMode('split')};
 $('rewindStart').onclick=()=>{
  if(!audio.src)return alert('先に曲を読み込んでください');
- rewindAbsoluteStart();
+ clearTimeout(loopDelayTimer);clearCountdown();loopWaiting=false;
+ audio.pause();playRange=null;activeIndex=null;setSelectedPlaybackLock(false);
+ const segs=getSegments();
+ let start=0;
+ if(selected.size&&segs.length){
+   const first=Math.min(...selected);
+   if(segs[first])start=segs[first].start;
+ }
+ try{audio.currentTime=start}catch(_){}
+ seek.value=audio.duration?start/audio.duration*1000:0;
+ $('current').textContent=fmt(start);
 };
 setPracticeMode('play');
 $('play').onclick=()=>{
@@ -486,7 +498,7 @@ function setSelectedPlaybackLock(locked){
  const modeSwitch=document.querySelector('.practiceModeSwitch');
  if(modeSwitch)modeSwitch.classList.toggle('playLocked',selectedPlaybackLocked);
 }
-function renderSegments(){let box=$('segments'),segs=getSegments();box.innerHTML='';if(!segs.length){box.innerHTML='<div class="empty">曲を読み込むとパート1が表示されます</div>';return}segs.forEach((x,i)=>{let d=document.createElement('div');d.className='segment'+(selected.has(i)?' selected':'');d.innerHTML=`<input class="selectbox" type="checkbox" ${selected.has(i)?'checked':''}><div class="grow"><input class="partName" value="${x.name}" aria-label="パート${i+1}の名称"><div class="segtimes">${fmt(x.start)} → ${fmt(x.end)}</div></div>${i<segs.length-1?'<button class="del">削除</button>':''}`;let name=d.querySelector('.partName');name.onchange=()=>{partNames[i]=name.value.trim()||('パート'+(i+1));name.value=partNames[i]};let cb=d.querySelector('.selectbox');cb.onchange=()=>{
+function renderSegments(){let box=$('segments'),segs=getSegments();box.innerHTML='';if(!segs.length){box.innerHTML='<div class="empty">曲を読み込むとパート1が表示されます</div>';return}segs.forEach((x,i)=>{let d=document.createElement('div');d.className='segment'+(selected.has(i)?' selected':'');d.innerHTML=`<input class="selectbox" type="checkbox" ${selected.has(i)?'checked':''}><div class="grow"><input class="partName" value="${x.name}" aria-label="パート${i+1}の名称"><div class="segtimes">${fmt(x.start)} → ${fmt(x.end)}</div></div>${practiceMode==='split'&&i<segs.length-1?'<button class="del">削除</button>':''}`;let name=d.querySelector('.partName');name.onchange=()=>{partNames[i]=name.value.trim()||('パート'+(i+1));name.value=partNames[i]};let cb=d.querySelector('.selectbox');cb.onchange=()=>{
       if(selectedPlaybackLocked){cb.checked=selected.has(i);return;}
       if(cb.checked) selected.add(i); else selected.delete(i);
       if(selected.size>=2){
@@ -515,8 +527,22 @@ function startCheckedPartsPlayback(){
  playRange={start:segs[first].start,end:segs[last].end};activeIndex=null;
  setSelectedPlaybackLock(true);audio.currentTime=playRange.start;audio.play();return true;
 }
-$('reset').onclick=()=>{if(!cuts.length)return;if(!confirm('本当に区切りをすべて削除しますか？'))return;cuts=[];partNames=[];activeIndex=null;selected.clear();playRange=null;renderSegments()};
+function bindResetButton(){
+ const reset=$('reset');
+ if(!reset)return;
+ reset.onclick=()=>{if(!cuts.length)return;if(!confirm('本当に区切りをすべて削除しますか？'))return;cuts=[];partNames=[];activeIndex=null;selected.clear();playRange=null;renderSegments()};
+}
+function renderResetForMode(){
+ const slot=$('resetSlot');
+ if(!slot)return;
+ slot.innerHTML='';
+ if(practiceMode==='split'){
+   slot.appendChild($('resetTemplate').content.cloneNode(true));
+   bindResetButton();
+ }
+}
 renderSegments();
+renderResetForMode();
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js?v=9').catch(()=>{}));
