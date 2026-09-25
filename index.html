@@ -264,6 +264,19 @@ button,
 #segments .del:disabled{opacity:.38!important;filter:saturate(.2) brightness(.75)!important;box-shadow:none!important;cursor:default!important}
 #segments .selectbox:disabled{opacity:.48!important}
 </style>
+<style id="selected-play-lock-style">
+#segments .del:disabled{
+ opacity:.34!important;
+ filter:saturate(.15) brightness(.72)!important;
+ box-shadow:none!important;
+}
+#segments .selectbox:disabled{opacity:.38!important;filter:grayscale(.45)!important}
+.playLocked{opacity:.45!important}
+.practiceModeSwitch.playLocked #modeSplit{
+ color:rgba(255,255,255,.28)!important;
+ cursor:default!important;
+}
+</style>
 </head><body><main class="app"><div class="title appLogo" aria-label="Split The Music"><span class="l1">Split</span><span class="l2">The</span><span class="l3">Music</span></div>
 <section class="card"><div class="row" style="margin-bottom:12px"><b>曲選択</b></div><div class="row"><div class="topActions"><label class="file">新規作成<input id="file" type="file" accept="audio/mpeg,audio/mp3,video/mp4,audio/mp4,.mp3,.mp4"></label><button id="savePracticeOpen" class="primary saveTopBtn" onclick="openSaveNameModal()">保存</button><button id="openSaved" class="primary openTopBtn">📂 保存データを開く</button></div><div id="loadstatus" class="small" style="width:100%;margin-top:8px"></div></div>
 <div style="margin-top:12px">
@@ -427,7 +440,7 @@ function setPracticeMode(mode){
  if(cut)cut.classList.toggle('modeHidden',practiceMode!=='split');
 }
 $('modePlay').onclick=()=>setPracticeMode('play');
-$('modeSplit').onclick=()=>setPracticeMode('split');
+$('modeSplit').onclick=()=>{if(selectedPlaybackLocked)return;setPracticeMode('split')};
 $('rewindStart').onclick=()=>{
  if(!audio.src)return alert('先に曲を読み込んでください');
  clearTimeout(loopDelayTimer);clearCountdown();loopWaiting=false;
@@ -460,7 +473,12 @@ function setSelectedPlaybackLock(locked){
  selectedPlaybackLocked=!!locked;
  if($('cut'))$('cut').disabled=selectedPlaybackLocked;
  if($('loopDelay'))$('loopDelay').disabled=selectedPlaybackLocked;
+ if($('modeSplit'))$('modeSplit').disabled=selectedPlaybackLocked;
  document.querySelectorAll('#segments .selectbox,#segments .del').forEach(el=>el.disabled=selectedPlaybackLocked);
+ const delayWrap=$('loopDelay') ? $('loopDelay').closest('.interval') || $('loopDelay').parentElement : null;
+ if(delayWrap)delayWrap.classList.toggle('playLocked',selectedPlaybackLocked);
+ const modeSwitch=document.querySelector('.practiceModeSwitch');
+ if(modeSwitch)modeSwitch.classList.toggle('playLocked',selectedPlaybackLocked);
 }
 function renderSegments(){let box=$('segments'),segs=getSegments();box.innerHTML='';if(!segs.length){box.innerHTML='<div class="empty">曲を読み込むとパート1が表示されます</div>';return}segs.forEach((x,i)=>{let d=document.createElement('div');d.className='segment'+(selected.has(i)?' selected':'');d.innerHTML=`<input class="selectbox" type="checkbox" ${selected.has(i)?'checked':''}><div class="grow"><input class="partName" value="${x.name}" aria-label="パート${i+1}の名称"><div class="segtimes">${fmt(x.start)} → ${fmt(x.end)}</div></div>${i<segs.length-1?'<button class="del">削除</button>':''}`;let name=d.querySelector('.partName');name.onchange=()=>{partNames[i]=name.value.trim()||('パート'+(i+1));name.value=partNames[i]};let cb=d.querySelector('.selectbox');cb.onchange=()=>{
       if(selectedPlaybackLocked){cb.checked=selected.has(i);return;}
