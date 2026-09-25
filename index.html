@@ -281,6 +281,24 @@ button,
 body:not(.splitMode) #segments .del,
 body:not(.splitMode) #reset{display:none!important}
 </style>
+<style id="split-mode-panel-cleanup">
+body.splitMode .interval,
+body.splitMode .help,
+body.splitMode .loopRow,
+body.splitMode #loopWrap,
+body.splitMode #loopLabel,
+body.splitMode #loopDelayWrap{display:none!important}
+body.splitMode .practiceModeSwitch.playLocked,
+body.splitMode .practiceModeSwitch.playLocked button{
+  opacity:.42!important;
+  pointer-events:none!important;
+}
+</style>
+<style id="mode-section-title">
+.splitTitle{display:none}
+body.splitMode .playTitle{display:none}
+body.splitMode .splitTitle{display:inline}
+</style>
 </head><body><main class="app"><div class="title appLogo" aria-label="Split The Music"><span class="l1">Split</span><span class="l2">The</span><span class="l3">Music</span></div>
 <section class="card"><div class="row" style="margin-bottom:12px"><b>曲選択</b></div><div class="row"><div class="topActions"><label class="file">新規作成<input id="file" type="file" accept="audio/mpeg,audio/mp3,video/mp4,audio/mp4,.mp3,.mp4"></label><button id="savePracticeOpen" class="primary saveTopBtn" onclick="openSaveNameModal()">保存</button><button id="openSaved" class="primary openTopBtn">📂 保存データを開く</button></div><div id="loadstatus" class="small" style="width:100%;margin-top:8px"></div></div>
 <div style="margin-top:12px">
@@ -316,7 +334,7 @@ body:not(.splitMode) #reset{display:none!important}
   </div>
 </div></section>
 
-<section class="card"><div class="row"><b>再生</b><div class="grow"></div><label class="small"><input id="loop" type="checkbox" checked> 選択範囲をループ</label><label class="small loopDelayLabel">インターバル <input id="loopDelay" type="number" min="0" max="60" step="1" value="0"> 秒</label></div><div class="small" style="margin-top:8px">複数パートを選択すると、最初の選択パートから最後の選択パートまで通しで再生します。</div><div id="segments"><div class="empty">曲を読み込むとパート1が表示されます</div></div><button id="reset" class="danger" style="width:100%;margin-top:12px">区切りをすべて削除</button>
+<section class="card"><div class="row"><b><span class="modeSectionTitle"><span class="playTitle">再生</span><span class="splitTitle">分割</span></span></b><div class="grow"></div><label class="small"><input id="loop" type="checkbox" checked> 選択範囲をループ</label><label class="small loopDelayLabel">インターバル <input id="loopDelay" type="number" min="0" max="60" step="1" value="0"> 秒</label></div><div class="small" style="margin-top:8px">複数パートを選択すると、最初の選択パートから最後の選択パートまで通しで再生します。</div><div id="segments"><div class="empty">曲を読み込むとパート1が表示されます</div></div><button id="reset" class="danger" style="width:100%;margin-top:12px">区切りをすべて削除</button>
 
 </section>
 <video id="audio" playsinline preload="metadata" style="display:none"></video></main><script>
@@ -465,7 +483,7 @@ $('play').onclick=()=>{
    playRange=null;setSelectedPlaybackLock(false);return;
  }
  if(practiceMode==='play'){startCheckedPartsPlayback();}
- else{clearTimeout(loopDelayTimer);clearCountdown();loopWaiting=false;playRange=null;setSelectedPlaybackLock(false);audio.play();}
+ else{clearTimeout(loopDelayTimer);clearCountdown();loopWaiting=false;playRange=null;setSelectedPlaybackLock(true);audio.play();}
 };audio.onplay=()=>$('play').textContent='⏸ 一時停止';audio.onpause=()=>$('play').textContent='▶ 再生';
 $('cut').onclick=()=>{if(!audio.src||!isFinite(audio.duration))return alert('先に曲を読み込んでください');let t=audio.currentTime;if(t<.15||t>audio.duration-.15)return alert('曲の開始・終了付近では区切れません');if(cuts.some(x=>Math.abs(x-t)<.15))return alert('ほぼ同じ位置に区切りがあります');cuts.push(t);cuts.sort((a,b)=>a-b);activeIndex=null;selected.clear();playRange=null;renderSegments()};
 function getSegments(){if(!isFinite(audio.duration))return[];let pts=[0,...cuts,audio.duration];return pts.slice(0,-1).map((s,i)=>({start:s,end:pts[i+1],name:partNames[i]||('パート'+(i+1))}))}
