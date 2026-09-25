@@ -457,8 +457,8 @@ function setPracticeMode(mode){
  if(changed && audio.paused && audio.src)rewindAbsoluteStart();
  renderSegments();
 }
-$('modePlay').onclick=()=>{if(!audio.paused)return;setPracticeMode('play')};setPracticeMode('play')};
-$('modeSplit').onclick=()=>{if(!audio.paused||selectedPlaybackLocked)return;setPracticeMode('split')};setPracticeMode('split')};
+$('modePlay').onclick=()=>{if(!audio.paused)return;setPracticeMode('play')};
+$('modeSplit').onclick=()=>{if(!audio.paused||selectedPlaybackLocked)return;setPracticeMode('split')};
 $('rewindStart').onclick=()=>{
  if(!audio.src)return alert('先に曲を読み込んでください');
  clearTimeout(loopDelayTimer);clearCountdown();loopWaiting=false;
