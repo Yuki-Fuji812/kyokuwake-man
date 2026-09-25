@@ -1,4 +1,4 @@
-<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Split The Music</title>
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>曲分けマン</title>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#0d0f14">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -315,7 +315,12 @@ body.splitMode .playOnlyOption{display:none!important}
 <style id="playing-mode-switch-dim">
 body.audioPlaying .practiceModeSwitch{opacity:.42!important;pointer-events:none!important}
 </style>
-</head><body><main class="app"><div class="title appLogo" aria-label="Split The Music"><span class="l1">Split</span><span class="l2">The</span><span class="l3">Music</span></div>
+<style id="play-loop-lock">
+body.audioPlaying:not(.splitMode) label:has(#loop){opacity:.42!important;pointer-events:none!important}
+</style>
+</head><body><main class="app"><div class="title appLogo" aria-label="曲分けマン">
+  <span class="l1">曲</span><span class="l2">分け</span><span class="l3">マン</span>
+</div>
 <section class="card"><div class="row" style="margin-bottom:12px"><b>曲選択</b></div><div class="row"><div class="topActions"><label class="file">新規作成<input id="file" type="file" accept="audio/mpeg,audio/mp3,video/mp4,audio/mp4,.mp3,.mp4"></label><button id="savePracticeOpen" class="primary saveTopBtn" onclick="openSaveNameModal()">保存</button><button id="openSaved" class="primary openTopBtn">📂 保存データを開く</button></div><div id="loadstatus" class="small" style="width:100%;margin-top:8px"></div></div>
 <div style="margin-top:12px">
   
@@ -500,7 +505,7 @@ $('play').onclick=()=>{
  }
  if(practiceMode==='play'){startCheckedPartsPlayback();}
  else{clearTimeout(loopDelayTimer);clearCountdown();loopWaiting=false;playRange=null;setSelectedPlaybackLock(false);audio.play();}
-};audio.onplay=()=>{$('play').textContent='⏸ 一時停止';document.body.classList.add('audioPlaying')};audio.onpause=()=>{$('play').textContent='▶ 再生';document.body.classList.remove('audioPlaying')};
+};audio.onplay=()=>{$('play').textContent='⏸ 一時停止';document.body.classList.add('audioPlaying');if(practiceMode==='play')$('loop').disabled=true};audio.onpause=()=>{$('play').textContent='▶ 再生';document.body.classList.remove('audioPlaying');$('loop').disabled=false};
 $('cut').onclick=()=>{if(!audio.src||!isFinite(audio.duration))return alert('先に曲を読み込んでください');let t=audio.currentTime;if(t<.15||t>audio.duration-.15)return alert('曲の開始・終了付近では区切れません');if(cuts.some(x=>Math.abs(x-t)<.15))return alert('ほぼ同じ位置に区切りがあります');cuts.push(t);cuts.sort((a,b)=>a-b);activeIndex=null;selected.clear();playRange=null;renderSegments()};
 function getSegments(){if(!isFinite(audio.duration))return[];let pts=[0,...cuts,audio.duration];return pts.slice(0,-1).map((s,i)=>({start:s,end:pts[i+1],name:partNames[i]||('パート'+(i+1))}))}
 function setSelectedPlaybackLock(locked){
@@ -611,6 +616,10 @@ function renderSavedPractices(){
       const f=stored instanceof File ? stored : new File([stored],p.fileName||'practice-media',{type:p.fileType||stored.type||''});
       if(objectUrl)URL.revokeObjectURL(objectUrl);
       objectUrl=URL.createObjectURL(f); currentSourceFile=f;
+      const fn=$('filename');
+      fn.textContent=f.name||p.fileName||'曲を選択してください';
+      fn.classList.remove('marquee');
+      requestAnimationFrame(()=>fn.classList.toggle('marquee',fn.scrollWidth>fn.parentElement.clientWidth));
       audio.pause();
       clearTimeout(loopDelayTimer);clearCountdown();loopWaiting=false;setSelectedPlaybackLock(false);
       audio.src=objectUrl;
