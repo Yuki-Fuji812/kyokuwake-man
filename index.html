@@ -321,7 +321,14 @@ body.audioPlaying:not(.splitMode) label:has(#loop){opacity:.42!important;pointer
 <style id="solemn-title">
 .title.appLogo{margin-top:18px!important;padding-top:8px!important;transform:none!important;font-family:"Hiragino Mincho ProN","Yu Mincho","YuMincho",serif!important;font-style:normal!important;font-weight:800!important;letter-spacing:.08em!important;filter:drop-shadow(0 2px 5px rgba(0,0,0,.55))}
 .title.appLogo span{color:#e7e9ee!important;transform:none!important;text-shadow:0 1px 0 #fff,0 3px 8px rgba(0,0,0,.55)!important}
-</style></head><body><main class="app"><div class="title appLogo" aria-label="曲分けマン">
+</style>
+<meta name="theme-color" content="#080b16">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="曲分けマン">
+<link rel="manifest" href="./manifest.webmanifest">
+
+</head><body><main class="app"><div class="title appLogo" aria-label="曲分けマン">
   <span class="l1">曲</span><span class="l2">分け</span><span class="l3">マン</span>
 </div>
 <section class="card"><div class="row" style="margin-bottom:12px"><b>曲選択</b></div><div class="row"><div class="topActions"><label class="file">新規作成<input id="file" type="file" accept="audio/mpeg,audio/mp3,video/mp4,audio/mp4,.mp3,.mp4"></label><button id="savePracticeOpen" class="primary saveTopBtn" onclick="openSaveNameModal()">保存</button><button id="openSaved" class="primary openTopBtn">📂 保存データを開く</button></div><div id="loadstatus" class="small" style="width:100%;margin-top:8px"></div></div>
@@ -361,15 +368,6 @@ body.audioPlaying:not(.splitMode) label:has(#loop){opacity:.42!important;pointer
 <section class="card"><div class="row"><b><span class="modeSectionTitle"><span class="playTitle">再生</span><span class="splitTitle">分割</span></span></b><div class="grow"></div><label class="small playOnlyOption"><input id="loop" type="checkbox" checked> 選択範囲をループ</label><label class="small loopDelayLabel playOnlyOption">インターバル <input id="loopDelay" type="number" min="0" max="60" step="1" value="0"> 秒</label></div><div class="small playOnlyOption" style="margin-top:8px">複数パートを選択すると、最初の選択パートから最後の選択パートまで通しで再生します。</div><div id="segments"><div class="empty">曲を読み込むとパート1が表示されます</div></div><button id="reset" class="danger" style="width:100%;margin-top:12px">区切りをすべて削除</button>
 
 </section>
-
-<section class="card" id="mediaTestCard">
-  <div style="font-weight:800;font-size:20px;margin-bottom:10px">Bluetoothイヤホン操作テスト</div>
-  <div class="small">イヤホンを操作すると、Webアプリに届いた操作を下に表示します。</div>
-  <div id="mediaTestLast" style="margin-top:12px;font-weight:800">受信待ち</div>
-  <div id="mediaTestLog" class="small" style="margin-top:8px;line-height:1.7;white-space:pre-wrap">—</div>
-  <button id="clearMediaTest" type="button" style="width:100%;margin-top:12px">テスト履歴を消去</button>
-</section>
-
 <video id="audio" playsinline preload="metadata" style="display:none"></video></main><script>
 const $=id=>document.getElementById(id),audio=$('audio'),seek=$('seek');let cuts=[],activeIndex=null,selected=new Set(),playRange=null,partNames=[];const fmt=t=>{if(!isFinite(t))return'0:00.00';let m=Math.floor(t/60),s=t-m*60;return `${m}:${s.toFixed(2).padStart(5,'0')}`};
 let objectUrl=null;
