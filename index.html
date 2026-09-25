@@ -260,6 +260,10 @@ button,
 .practiceModeSwitch.split .modeCursor{transform:translateX(100%)}
 .splitActions .modeHidden{display:none!important}
 </style>
+<style id="play-lock-visual">
+#segments .del:disabled{opacity:.38!important;filter:saturate(.2) brightness(.75)!important;box-shadow:none!important;cursor:default!important}
+#segments .selectbox:disabled{opacity:.48!important}
+</style>
 </head><body><main class="app"><div class="title appLogo" aria-label="Split The Music"><span class="l1">Split</span><span class="l2">The</span><span class="l3">Music</span></div>
 <section class="card"><div class="row" style="margin-bottom:12px"><b>曲選択</b></div><div class="row"><div class="topActions"><label class="file">新規作成<input id="file" type="file" accept="audio/mpeg,audio/mp3,video/mp4,audio/mp4,.mp3,.mp4"></label><button id="savePracticeOpen" class="primary saveTopBtn" onclick="openSaveNameModal()">保存</button><button id="openSaved" class="primary openTopBtn">📂 保存データを開く</button></div><div id="loadstatus" class="small" style="width:100%;margin-top:8px"></div></div>
 <div style="margin-top:12px">
@@ -295,7 +299,7 @@ button,
   </div>
 </div></section>
 
-<section class="card"><div class="row"><b>再生</b><div class="grow"></div><label class="small"><input id="loop" type="checkbox" checked> 選択範囲をループ</label><label class="small loopDelayLabel">インターバル <input id="loopDelay" type="number" min="0" max="60" step="1" value="0"> 秒</label></div><div class="small" style="margin-top:8px">複数パートを選択すると、最初の選択パートから最後の選択パートまで通しで再生します。</div><button id="playSelected" style="width:100%;margin-top:10px">▶ 選択パートを再生</button><div id="segments"><div class="empty">曲を読み込むとパート1が表示されます</div></div><button id="reset" class="danger" style="width:100%;margin-top:12px">区切りをすべて削除</button>
+<section class="card"><div class="row"><b>再生</b><div class="grow"></div><label class="small"><input id="loop" type="checkbox" checked> 選択範囲をループ</label><label class="small loopDelayLabel">インターバル <input id="loopDelay" type="number" min="0" max="60" step="1" value="0"> 秒</label></div><div class="small" style="margin-top:8px">複数パートを選択すると、最初の選択パートから最後の選択パートまで通しで再生します。</div><div id="segments"><div class="empty">曲を読み込むとパート1が表示されます</div></div><button id="reset" class="danger" style="width:100%;margin-top:12px">区切りをすべて削除</button>
 
 </section>
 <video id="audio" playsinline preload="metadata" style="display:none"></video></main><script>
@@ -442,8 +446,13 @@ $('rewindStart').onclick=()=>{
 setPracticeMode('play');
 $('play').onclick=()=>{
  if(!audio.src)return alert('先に曲を読み込んでください');
- unlockCountdownBeep();clearTimeout(loopDelayTimer);clearCountdown();loopWaiting=false;
- if(audio.paused){audio.play()}else{audio.pause();if(selectedPlaybackLocked){playRange=null;setSelectedPlaybackLock(false)}}
+ unlockCountdownBeep();
+ if(!audio.paused){
+   audio.pause();clearTimeout(loopDelayTimer);clearCountdown();loopWaiting=false;
+   playRange=null;setSelectedPlaybackLock(false);return;
+ }
+ if(practiceMode==='play'){startCheckedPartsPlayback();}
+ else{clearTimeout(loopDelayTimer);clearCountdown();loopWaiting=false;playRange=null;setSelectedPlaybackLock(false);audio.play();}
 };audio.onplay=()=>$('play').textContent='⏸ 一時停止';audio.onpause=()=>$('play').textContent='▶ 再生';
 $('cut').onclick=()=>{if(!audio.src||!isFinite(audio.duration))return alert('先に曲を読み込んでください');let t=audio.currentTime;if(t<.15||t>audio.duration-.15)return alert('曲の開始・終了付近では区切れません');if(cuts.some(x=>Math.abs(x-t)<.15))return alert('ほぼ同じ位置に区切りがあります');cuts.push(t);cuts.sort((a,b)=>a-b);activeIndex=null;selected.clear();playRange=null;renderSegments()};
 function getSegments(){if(!isFinite(audio.duration))return[];let pts=[0,...cuts,audio.duration];return pts.slice(0,-1).map((s,i)=>({start:s,end:pts[i+1],name:partNames[i]||('パート'+(i+1))}))}
@@ -473,8 +482,16 @@ function renderSegments(){let box=$('segments'),segs=getSegments();box.innerHTML
  del.addEventListener('pointerleave',cancel);
  del.addEventListener('contextmenu',ev=>ev.preventDefault());
  del.addEventListener('click',ev=>{ev.preventDefault();ev.stopPropagation()});
-}box.appendChild(d)})}
-$('playSelected').onclick=()=>{unlockCountdownBeep();clearTimeout(loopDelayTimer);clearCountdown();loopWaiting=false;let segs=getSegments();if(!segs.length)return alert('先に曲を読み込んでください');if(!selected.size)return alert('再生したいパートを選択してください');let ids=[...selected].sort((a,b)=>a-b),first=ids[0],last=ids[ids.length-1];playRange={start:segs[first].start,end:segs[last].end};activeIndex=null;setSelectedPlaybackLock(true);audio.currentTime=playRange.start;audio.play()};$('reset').onclick=()=>{if(!cuts.length)return;if(!confirm('本当に区切りをすべて削除しますか？'))return;cuts=[];partNames=[];activeIndex=null;selected.clear();playRange=null;renderSegments()};
+}box.appendChild(d)});if(selectedPlaybackLocked)setSelectedPlaybackLock(true)}
+function startCheckedPartsPlayback(){
+ unlockCountdownBeep();clearTimeout(loopDelayTimer);clearCountdown();loopWaiting=false;
+ const segs=getSegments();if(!segs.length)return false;
+ let first=0,last=segs.length-1;
+ if(selected.size){const ids=[...selected].sort((a,b)=>a-b);first=ids[0];last=ids[ids.length-1];}
+ playRange={start:segs[first].start,end:segs[last].end};activeIndex=null;
+ setSelectedPlaybackLock(true);audio.currentTime=playRange.start;audio.play();return true;
+}
+$('reset').onclick=()=>{if(!cuts.length)return;if(!confirm('本当に区切りをすべて削除しますか？'))return;cuts=[];partNames=[];activeIndex=null;selected.clear();playRange=null;renderSegments()};
 renderSegments();
 
 if ('serviceWorker' in navigator) {
